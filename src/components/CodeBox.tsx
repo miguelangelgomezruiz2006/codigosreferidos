@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { reportAction, revealAction, trackAction } from "@/app/actions/public";
 import type { RevealedCode } from "@/lib/codes";
 import type { SignupGuide } from "@/lib/signup-guides";
+import { IconExternal } from "@/components/Icons";
 
 function StepNum({ n }: { n: number }) {
   return <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand text-sm font-bold text-white">{n}</span>;
@@ -65,7 +66,7 @@ export function CodeBox({
     return (
       <div className="flex flex-col gap-3">
         <button type="button" className="btn btn-accent w-full text-base" onClick={() => reveal()} disabled={pending}>
-          {pending ? "Buscando código…" : "Ver el código"}
+          {pending ? "Buscando código…" : "Ver mi código"}
         </button>
         {error && <p className="note note-err" role="alert">{error}</p>}
         <p className="hint text-center">Gratis y sin registrarte.</p>
@@ -109,7 +110,8 @@ export function CodeBox({
               <p className="pt-0.5 font-semibold">Abre tu cuenta en {entityName}</p>
               <p className="hint">{guide.where}</p>
               <a href={guide.signupUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-primary w-full">
-                {guide.signupLabel} ↗
+                {guide.signupLabel}
+                <IconExternal size={16} />
               </a>
             </div>
           </li>
@@ -135,7 +137,8 @@ export function CodeBox({
               className={`btn w-full ${code.code ? "btn-ghost" : "btn-primary"}`}
               onClick={() => void trackAction(code.id, "OPEN")}
             >
-              Abrir enlace de invitación de {entityName} ↗
+              Ir a la promoción de {entityName}
+              <IconExternal size={16} />
             </a>
           )}
           <p className="hint">

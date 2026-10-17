@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { EntityLogo } from "@/components/EntityLogo";
-import { IconArrowRight, IconCheck, IconClock, IconColumns, IconShieldCheck, IconStar } from "@/components/Icons";
+import { IconArrowRight, IconCheck, IconClock, IconShieldCheck, IconStar } from "@/components/Icons";
 import { RiskBadge } from "@/components/RiskNotice";
 import { daysLeft, fmtEuros, fmtShortDate } from "@/lib/format";
-import { CATEGORY_LABELS, EFFORT_LABELS, EFFORT_TAGS, REWARD_LABELS, offerStatus, type EffortKey, type OfferStatus, type RewardKey } from "@/lib/site";
+import { CATEGORY_LABELS, EFFORT_LABELS, REWARD_LABELS, offerStatus, type EffortKey, type OfferStatus, type RewardKey } from "@/lib/site";
 
 export interface PromoCardData {
   slug: string;
@@ -118,30 +118,18 @@ export function PayrollBadge({ requiresPayroll }: { requiresPayroll?: boolean })
   );
 }
 
-/** Etiqueta del tipo de requisito. «Con inversión» se distingue en ámbar porque implica riesgo. */
-function EffortTag({ effort }: { effort: EffortKey }) {
-  const tone = effort === "INVEST" ? "bg-accent-soft text-ink ring-1 ring-accent/50" : "bg-bg text-ink ring-1 ring-line";
-  return <span className={`badge ${tone}`}>{EFFORT_TAGS[effort]}</span>;
-}
-
-export interface CompareControl {
-  selected: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}
-
-export function PromoCard({ p, compare }: { p: PromoCardData; compare?: CompareControl }) {
+export function PromoCard({ p }: { p: PromoCardData }) {
   const status = offerStatus(p);
   const expired = status.kind === "expired";
   const highlighted = p.featured && !expired;
-  const steps = p.steps?.length ?? 0;
   const href = `/promo/${p.slug}`;
+  const requirement = p.requirementText || (p.effort ? EFFORT_LABELS[p.effort] : "Consulta los requisitos");
 
   return (
     <article
       className={`card group relative flex w-full flex-col gap-3 p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus-within:shadow-md ${
         highlighted ? "mt-2 border-accent ring-2 ring-accent/40 sm:mt-0" : ""
-      } ${compare?.selected ? "ring-2 ring-brand" : ""}`}
+      }`}
     >
       {highlighted && (
         <span className="badge absolute -top-3 left-3 gap-1 bg-accent px-2.5 py-1 text-ink shadow-sm">
@@ -150,80 +138,48 @@ export function PromoCard({ p, compare }: { p: PromoCardData; compare?: CompareC
         </span>
       )}
 
-      <div className="flex items-start gap-3">
-        <EntityLogo name={p.entity.name} logoUrl={p.entity.logoUrl} color={p.entity.color} size={44} />
+      <div className="flex items-center gap-3">
+        <EntityLogo name={p.entity.name} logoUrl={p.entity.logoUrl} color={p.entity.color} size={40} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold leading-tight text-muted">{p.entity.name}</p>
           <h3 className={`font-display text-xl font-bold leading-tight ${expired ? "text-muted line-through" : "text-ink"}`}>{p.bonusText}</h3>
         </div>
-        {compare && !expired && (
-          <button
-            type="button"
-            onClick={compare.onToggle}
-            disabled={compare.disabled && !compare.selected}
-            aria-pressed={compare.selected}
-            className={`relative z-10 inline-flex min-h-10 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-              compare.selected ? "border-brand bg-brand text-white" : "border-line bg-white text-ink hover:border-brand"
-            }`}
-            title={compare.disabled && !compare.selected ? "Puedes comparar hasta 3 ofertas" : undefined}
-          >
-            {compare.selected ? <IconCheck size={14} /> : <IconColumns size={14} />}
-            {compare.selected ? "Comparando" : "Comparar"}
-          </button>
-        )}
       </div>
 
       {!expired && (
-        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded-lg bg-bg px-3 py-2 text-sm">
-          <dt className="text-xs text-muted">Qué haces</dt>
-          <dt className="text-right text-xs text-muted">Pones tú</dt>
-          <dd className="font-semibold leading-snug">{p.requirementText || (p.effort ? EFFORT_LABELS[p.effort] : "Consulta los requisitos")}</dd>
-          <dd className="text-right font-semibold tabular-nums">{outlayText(p)}</dd>
+        <dl className="grid gap-1.5 border-t border-line pt-3 text-sm">
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="shrink-0 text-muted">Qué haces</dt>
+            <dd className="text-right font-semibold leading-snug">{requirement}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="shrink-0 text-muted">Pones tú</dt>
+            <dd className="text-right font-semibold tabular-nums">{outlayText(p)}</dd>
+          </div>
+          {p.rewardType && (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="shrink-0 text-muted">Recibes</dt>
+              <dd className="text-right font-semibold">{REWARD_LABELS[p.rewardType]}</dd>
+            </div>
+          )}
         </dl>
       )}
 
-      {!expired && (
-        <ul className="flex flex-wrap items-center gap-1.5 text-xs" aria-label="Características">
-          {p.effort && (
-            <li>
-              <EffortTag effort={p.effort} />
-            </li>
-          )}
-          {p.rewardType && <li className="badge bg-bg text-ink ring-1 ring-line">Premio {REWARD_LABELS[p.rewardType].toLowerCase()}</li>}
-          <li>
-            <PayrollBadge requiresPayroll={p.requiresPayroll} />
-          </li>
-          {steps > 0 && <li className="badge bg-bg text-ink ring-1 ring-line">{steps} {steps === 1 ? "paso" : "pasos"}</li>}
-          {p.risk && p.risk !== "NONE" && (
-            <li>
-              <RiskBadge risk={p.risk} />
-            </li>
-          )}
-        </ul>
+      {/* Solo lo que cambia la decisión: que acaba pronto o que es una inversión con riesgo. */}
+      {!expired && (status.kind === "soon" || (p.risk && p.risk !== "NONE")) && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {status.kind === "soon" && <ValidityLabel expiresAt={p.expiresAt} />}
+          {p.risk && p.risk !== "NONE" && <RiskBadge risk={p.risk} />}
+        </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-        <ValidityLabel expiresAt={p.expiresAt} expired={expired} />
-        {!expired && <ReviewLabel lastReviewedAt={p.lastReviewedAt} />}
-        {!expired && p.workedCount ? <WorkedLabel count={p.workedCount} /> : null}
-      </div>
-
-      <div className="mt-auto grid grid-cols-2 gap-2">
-        {/* «Ver requisitos» cubre toda la tarjeta; los demás controles quedan por encima. */}
-        <Link
-          href={href}
-          className={`btn btn-ghost btn-sm after:absolute after:inset-0 after:rounded-xl ${expired ? "col-span-2" : ""}`}
-          aria-label={`Ver requisitos de ${p.entity.name}`}
-        >
-          Ver requisitos
-        </Link>
-        {!expired && (
-          <Link href={`${href}#codigo`} className="btn btn-primary btn-sm relative z-10" aria-label={`Conseguir la recompensa de ${p.entity.name}`}>
-            Conseguir
-            <IconArrowRight size={14} />
-          </Link>
-        )}
-      </div>
+      <Link
+        href={href}
+        className={`btn mt-auto w-full after:absolute after:inset-0 after:rounded-xl ${expired ? "btn-ghost" : "btn-primary group-hover:bg-brand-dark"}`}
+      >
+        {expired ? "Ver cómo era" : "Ver cómo conseguirla"}
+        {!expired && <IconArrowRight size={16} />}
+      </Link>
     </article>
   );
 }
