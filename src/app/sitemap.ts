@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
+import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const promos = await db.promotion.findMany({ where: { status: { not: "DRAFT" } }, select: { slug: true, updatedAt: true } });
+  // Solo las ofertas vigentes: las caducadas no se indexan.
+  const promos = await db.promotion.findMany({ where: activePromoWhere(), select: { slug: true, updatedAt: true } });
   return [
     { url: siteUrl("/"), changeFrequency: "daily", priority: 1 },
     { url: siteUrl("/como-funciona"), changeFrequency: "monthly", priority: 0.5 },

@@ -51,29 +51,47 @@ export const EFFORT_TAGS = {
 export interface FilterablePromo {
   effort: EffortKey;
   rewardType: RewardKey;
+  requiredCents: number | null;
   entity: { category: CategoryKey };
 }
 
+/** Dinero mínimo conocido: 0 si solo hay que abrir la cuenta; null si las condiciones no lo dicen. */
+export function knownOutlayCents(p: Pick<FilterablePromo, "effort" | "requiredCents">): number | null {
+  if (p.requiredCents != null) return p.requiredCents;
+  return p.effort === "NONE" ? 0 : null;
+}
+
+const upTo = (limit: number) => (p: FilterablePromo) => {
+  const c = knownOutlayCents(p);
+  // Si no se sabe cuánto piden, no se puede decir que esté por debajo del límite.
+  return c !== null && c <= limit;
+};
+
 /**
- * Filtros de la portada en tres grupos combinables: dentro de un grupo se elige una opción;
- * entre grupos se suman. Solo usan los datos guardados de cada oferta: si falta un dato, no cumple.
+ * Filtros en grupos combinables: dentro de un grupo se elige una opción; entre grupos se suman.
+ * Solo usan los datos guardados de cada oferta: si falta un dato, la oferta no cumple el filtro.
  */
 export const FILTER_GROUPS = {
-  esf: {
-    label: "Qué tienes que hacer",
-    all: "Cualquier requisito",
+  inversion: {
+    label: "Inversión",
+    all: "Con o sin inversión",
     options: {
-      "sin-invertir": { label: "Sin inversión", test: (p: FilterablePromo) => p.effort !== "INVEST" },
-      // Solo las que únicamente piden abrir la cuenta. «Con compras» puede necesitar saldo, así que no cuenta.
-      "sin-ingreso": { label: "Sin ingreso inicial", test: (p: FilterablePromo) => p.effort === "NONE" },
-      compras: { label: "Con compras", test: (p: FilterablePromo) => p.effort === "SPEND" },
-      deposito: { label: "Con depósito", test: (p: FilterablePromo) => p.effort === "DEPOSIT" },
-      inversion: { label: "Con inversión", test: (p: FilterablePromo) => p.effort === "INVEST" },
+      "sin-invertir": { label: "Sin invertir", test: (p: FilterablePromo) => p.effort !== "INVEST" },
+      "con-inversion": { label: "Requiere inversión", test: (p: FilterablePromo) => p.effort === "INVEST" },
+    },
+  },
+  dinero: {
+    label: "Dinero necesario",
+    all: "Cualquier importe",
+    options: {
+      "sin-ingreso": { label: "Sin ingreso inicial", test: upTo(0) },
+      "hasta-100": { label: "Hasta 100 €", test: upTo(10000) },
+      "hasta-1000": { label: "Hasta 1.000 €", test: upTo(100000) },
     },
   },
   premio: {
-    label: "Premio",
-    all: "Cualquier premio",
+    label: "Recompensa",
+    all: "Cualquier recompensa",
     options: {
       efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.rewardType === "CASH" },
       cashback: { label: "Cashback", test: (p: FilterablePromo) => p.rewardType === "CASHBACK" },
@@ -82,7 +100,7 @@ export const FILTER_GROUPS = {
   },
   cat: {
     label: "Tipo de entidad",
-    all: "Todas las entidades",
+    all: "Bancos y apps",
     options: Object.fromEntries(
       Object.entries(CATEGORY_LABELS).map(([key, label]) => [key, { label, test: (p: FilterablePromo) => p.entity.category === key }]),
     ) as Record<CategoryKey, { label: string; test: (p: FilterablePromo) => boolean }>,
@@ -108,10 +126,7 @@ export function matchesFilters(p: FilterablePromo, filters: FilterState, except?
 
 export const SORT_OPTIONS = {
   bono: "Mayor recompensa",
-  desembolso: "Menor desembolso",
-  facil: "Menos pasos",
-  revisadas: "Revisadas hace menos",
-  caducan: "Acaban antes",
+  capital: "Menos dinero necesario",
 } as const;
 
 export type SortKey = keyof typeof SORT_OPTIONS;

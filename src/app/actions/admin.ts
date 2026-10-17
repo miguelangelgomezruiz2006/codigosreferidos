@@ -231,6 +231,37 @@ export async function deleteOfferReportAction(form: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+/**
+ * Comprueba que los enlaces a las condiciones oficiales responden. No toca los enlaces de invitación,
+ * para no generar visitas falsas en los programas de referidos.
+ */
+export async function checkTermsLinksAction(_prev: FormState, _form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const promos = await db.promotion.findMany({
+    where: { status: { not: "DRAFT" } },
+    select: { termsUrl: true, entity: { select: { name: true } } },
+  });
+  const headers = { "user-agent": "Mozilla/5.0 (compatible; BonificadosLinkCheck/1.0)" };
+  const results = await Promise.all(
+    promos.map(async (p) => {
+      try {
+        let res = await fetch(p.termsUrl, { method: "HEAD", redirect: "follow", headers, signal: AbortSignal.timeout(8000) });
+        // Algunas webs no aceptan HEAD: se repite con GET.
+        if (!res.ok) res = await fetch(p.termsUrl, { method: "GET", redirect: "follow", headers, signal: AbortSignal.timeout(8000) });
+        return { name: p.entity.name, ok: res.ok, status: res.status };
+      } catch {
+        return { name: p.entity.name, ok: false, status: 0 };
+      }
+    }),
+  );
+  const bad = results.filter((r) => !r.ok);
+  if (bad.length === 0) return { ok: `Los ${results.length} enlaces de condiciones oficiales responden bien.`, nonce: Date.now() };
+  return {
+    error: `No responden bien: ${bad.map((b) => `${b.name} (${b.status || "sin respuesta"})`).join(", ")}. Algunas webs bloquean comprobaciones automáticas: ábrelos a mano para confirmarlo.`,
+    nonce: Date.now(),
+  };
+}
+
 /* ---------- Ajustes ---------- */
 
 export async function saveSettingsAction(_prev: FormState, form: FormData): Promise<FormState> {

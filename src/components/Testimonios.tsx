@@ -1,7 +1,7 @@
 import { entityNames, type Testimonio } from "@/lib/testimonios";
 import { SITE_NAME } from "@/lib/site";
 
-/** Opiniones de personas que han cobrado. Se indica que son amigos del propietario. */
+/** Opiniones de amigos del propietario. Se indica quiénes son y si dicen haber cobrado o siguen pendientes. */
 export function Testimonios({
   items,
   title,
@@ -29,14 +29,18 @@ export function Testimonios({
                 </span>
                 <span>
                   <strong className="block text-ink">{t.name}</strong>
-                  <span className="text-muted">Ha hecho {entityNames(t)}</span>
+                  <span className="text-muted">
+                    {t.estado === "cobrado" ? `Dice haber cobrado en ${entityNames(t)}` : `Cumplió los pasos en ${entityNames(t)}; pendiente de cobro`}
+                  </span>
                 </span>
               </figcaption>
             </figure>
           </li>
         ))}
       </ul>
-      <p className="hint mt-2">Son amigos del propietario de {SITE_NAME} que han usado estas ofertas y nos han contado su experiencia.</p>
+      <p className="hint mt-2">
+        Son amigos del propietario de {SITE_NAME} y cuentan su experiencia con sus palabras. No hemos comprobado los cobros con las entidades.
+      </p>
     </section>
   );
 }

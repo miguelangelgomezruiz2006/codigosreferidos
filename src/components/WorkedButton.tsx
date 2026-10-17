@@ -20,14 +20,14 @@ export function WorkedButton({ promotionId, entityName, initialCount }: { promot
       <h2 className="font-bold">¿Ya has cobrado el bono de {entityName}?</h2>
       <p className="text-sm">
         {count > 0
-          ? `${count} ${count === 1 ? "persona ha confirmado" : "personas han confirmado"} que les ha funcionado.`
-          : "Sé el primero en confirmar que funciona."}
+          ? `${count} ${count === 1 ? "persona dice" : "personas dicen"} haberlo cobrado. Lo declaran ellas; no lo comprobamos con la entidad.`
+          : "Si ya has recibido la recompensa, cuéntalo para ayudar a otras personas."}
       </p>
       {message ? (
         <p className="note note-ok" role="status">{message}</p>
       ) : (
         <button type="button" className="btn btn-primary btn-sm" onClick={vote} disabled={pending}>
-          {pending ? "Enviando…" : "Sí, me ha funcionado"}
+          {pending ? "Enviando…" : "Ya he cobrado la recompensa"}
         </button>
       )}
     </div>

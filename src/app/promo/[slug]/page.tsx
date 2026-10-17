@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
 import { OfferReportForm } from "@/components/OfferReportForm";
-import { ExpiryLabel, StatusLabel, ValidityLabel, outlayText } from "@/components/PromoCard";
+import { ExpiryLabel, OUTLAY_HINTS, StatusLabel, ValidityLabel, outlayLabel, outlayText } from "@/components/PromoCard";
 import { ShareButton } from "@/components/ShareButton";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewList } from "@/components/ReviewList";
@@ -40,6 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/promo/${promo.slug}` },
+    // Las ofertas terminadas siguen accesibles, pero no se ofrecen a Google como si estuvieran vigentes.
+    ...(isPromoActive(promo) ? {} : { robots: { index: false, follow: true } }),
     openGraph: { title, description, url: `/promo/${promo.slug}`, type: "article" },
   };
 }
@@ -84,8 +86,9 @@ export default async function PromoPage({ params }: Props) {
                 <dd className="font-semibold">{promo.requirementText || "Consulta los pasos"}</dd>
               </div>
               <div>
-                <dt className="text-muted">Pones tú</dt>
+                <dt className="text-muted">{outlayLabel(promo.effort)}</dt>
                 <dd className="font-semibold tabular-nums">{outlayText(promo)}</dd>
+                <dd className="text-xs text-muted">{OUTLAY_HINTS[promo.effort]}</dd>
               </div>
               <div>
                 <dt className="text-muted">Recibes</dt>
@@ -145,6 +148,11 @@ export default async function PromoPage({ params }: Props) {
             </h2>
             <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 leading-relaxed text-muted">
               <li>Solo cobras si cumples todos los pasos y plazos. Si falta alguno, {entity.name} puede no pagar la recompensa.</li>
+              {promo.effort === "INVEST" && (
+                <li className="font-semibold text-ink">
+                  Pide invertir: el dinero invertido puede perder valor, y la recompensa no compensa necesariamente esa pérdida.
+                </li>
+              )}
               <li>
                 Quién puede participar, los plazos exactos y cuándo pagan están en las{" "}
                 <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-brand underline underline-offset-2">

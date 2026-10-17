@@ -69,7 +69,7 @@ export function CodeBox({
           {pending ? "Buscando código…" : "Ver mi código"}
         </button>
         {error && <p className="note note-err" role="alert">{error}</p>}
-        <p className="hint text-center">Gratis y sin registrarte.</p>
+        <p className="hint text-center">Ver el código es gratis y no tienes que crear una cuenta en Bonificados. La cuenta la abres en {entityName}.</p>
       </div>
     );
   }

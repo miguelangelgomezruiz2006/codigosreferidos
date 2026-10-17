@@ -31,6 +31,22 @@ export function outlayText(p: Pick<PromoCardData, "requiredCents" | "effort">): 
   return p.effort === "NONE" ? "Nada" : "No indicado";
 }
 
+/**
+ * Cómo se llama el dinero según el requisito: no es lo mismo depositar (sigue siendo tuyo),
+ * gastar (sale de tu cuenta) o invertir (puede perder valor).
+ */
+export const OUTLAY_LABELS = { NONE: "Pones", SPEND: "Gastas", DEPOSIT: "Depositas", INVEST: "Inviertes" } as const;
+export const OUTLAY_HINTS = {
+  NONE: "No tienes que poner dinero.",
+  SPEND: "Es dinero que gastas en compras.",
+  DEPOSIT: "Lo ingresas en tu cuenta y sigue siendo tuyo.",
+  INVEST: "Es una inversión: puede perder valor.",
+} as const;
+
+export function outlayLabel(effort?: EffortKey): string {
+  return effort ? OUTLAY_LABELS[effort] : "Pones tú";
+}
+
 /** Revisión manual: fecha de la última comprobación o «Pendiente de revisión». Nunca se marca como revisada sin fecha. */
 export function ReviewLabel({ lastReviewedAt }: { lastReviewedAt?: Date | null }) {
   return lastReviewedAt ? (
@@ -92,12 +108,13 @@ export function StatusLabel({ status }: { status: OfferStatus }) {
   }
 }
 
+/** Personas que dicen haber cobrado (lo declaran ellas al pulsar «Me ha funcionado»; no lo comprobamos con la entidad). */
 export function WorkedLabel({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
     <span className="inline-flex items-center gap-1 font-semibold text-brand-dark">
       <IconCheck size={14} />
-      {count} {count === 1 ? "ya lo ha cobrado" : "ya lo han cobrado"}
+      {count} {count === 1 ? "dice haberlo cobrado" : "dicen haberlo cobrado"}
     </span>
   );
 }
@@ -153,7 +170,7 @@ export function PromoCard({ p }: { p: PromoCardData }) {
             <dd className="text-right font-semibold leading-snug">{requirement}</dd>
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="shrink-0 text-muted">Pones tú</dt>
+            <dt className="shrink-0 text-muted">{outlayLabel(p.effort)}</dt>
             <dd className="text-right font-semibold tabular-nums">{outlayText(p)}</dd>
           </div>
           {p.rewardType && (
@@ -165,11 +182,13 @@ export function PromoCard({ p }: { p: PromoCardData }) {
         </dl>
       )}
 
-      {/* Solo lo que cambia la decisión: que acaba pronto o que es una inversión con riesgo. */}
-      {!expired && (status.kind === "soon" || (p.risk && p.risk !== "NONE")) && (
-        <div className="flex flex-wrap gap-2 text-xs">
+      {/* Solo lo que cambia la decisión: si pide invertir, si acaba pronto y si los datos están revisados. */}
+      {!expired && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {p.effort === "INVEST" && <span className="badge bg-accent-soft text-ink ring-1 ring-accent/50">Requiere inversión</span>}
+          {p.risk && p.risk !== "NONE" && p.effort !== "INVEST" && <RiskBadge risk={p.risk} />}
           {status.kind === "soon" && <ValidityLabel expiresAt={p.expiresAt} />}
-          {p.risk && p.risk !== "NONE" && <RiskBadge risk={p.risk} />}
+          <ReviewLabel lastReviewedAt={p.lastReviewedAt} />
         </div>
       )}
 

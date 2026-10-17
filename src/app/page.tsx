@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { OffersExplorer } from "@/components/OffersExplorer";
 import { ReviewList } from "@/components/ReviewList";
@@ -5,10 +6,12 @@ import { Testimonios } from "@/components/Testimonios";
 import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtEuros } from "@/lib/format";
-import { FILTER_GROUPS, SITE_NAME, isFilterValue, type FilterGroupKey, type FilterState } from "@/lib/site";
+import { FILTER_GROUPS, SITE_NAME, isFilterValue, isSortKey, type FilterGroupKey, type FilterState, type SortKey } from "@/lib/site";
 import { TESTIMONIOS } from "@/lib/testimonios";
 
 export const dynamic = "force-dynamic";
+// Los filtros cambian la URL, pero es la misma página: una sola dirección para Google.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const STEPS = [
   ["Elige una oferta", "Cada una dice qué tienes que hacer y cuánto pones."],
@@ -16,18 +19,27 @@ const STEPS = [
   ["Cobra la recompensa", "La entidad te la paga si cumples sus condiciones."],
 ];
 
-type Search = { cat?: string; esf?: string; premio?: string };
+type Search = { q?: string; orden?: string; esf?: string } & Partial<Record<FilterGroupKey, string>>;
+
+/** Enlaces antiguos usaban «esf» para varios filtros: se traducen a los grupos actuales. */
+const LEGACY_ESF: Record<string, [FilterGroupKey, string]> = {
+  "sin-invertir": ["inversion", "sin-invertir"],
+  "sin-ingreso": ["dinero", "sin-ingreso"],
+  efectivo: ["premio", "efectivo"],
+  cripto: ["premio", "cripto"],
+};
 
 export default async function Home({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;
-  // Enlaces antiguos: «esf=efectivo» y «esf=cripto» eran filtros de premio.
-  const legacyPremio = params.esf === "efectivo" || params.esf === "cripto" ? params.esf : undefined;
-  const raw: Record<FilterGroupKey, string | undefined> = { esf: params.esf, premio: params.premio ?? legacyPremio, cat: params.cat };
   const filters: FilterState = {};
+  const legacy = params.esf ? LEGACY_ESF[params.esf] : undefined;
+  if (legacy) filters[legacy[0]] = legacy[1];
   for (const g of Object.keys(FILTER_GROUPS) as FilterGroupKey[]) {
-    const v = raw[g];
+    const v = params[g];
     if (isFilterValue(g, v)) filters[g] = v;
   }
+  const sort: SortKey = isSortKey(params.orden) ? params.orden : "bono";
+  const query = (params.q ?? "").slice(0, 60);
 
   const [offers, withPayroll, reviews] = await Promise.all([
     db.promotion.findMany({
@@ -73,7 +85,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     ],
     [
       "¿Tengo que poner dinero?",
-      "Depende de la oferta. Cada tarjeta lo dice en «Pones tú», y la ficha explica los importes y plazos.",
+      "Depende de la oferta. Cada tarjeta dice si depositas (sigue siendo tuyo), gastas o inviertes (puede perder valor), y cuánto. Si las condiciones no lo dicen, pone «No indicado».",
     ],
     [
       `¿Cómo gana dinero ${SITE_NAME}?`,
@@ -108,7 +120,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         <h2 id="ofertas-titulo" className="sr-only">
           Ofertas
         </h2>
-        <OffersExplorer offers={offers} initial={filters} />
+        <OffersExplorer offers={offers} initial={{ q: query, sort, filters }} />
         <p className="mt-4 text-xs leading-relaxed text-muted">
           Las cantidades son las recompensas que anuncia cada entidad para nuevos clientes y dependen de cumplir sus condiciones. Algunos códigos son
           del propietario de {SITE_NAME}, que puede recibir una recompensa si los usas.{" "}
