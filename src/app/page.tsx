@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       orderBy: [{ featured: "desc" }, ...SORTS[sortKey].orderBy],
       include: { entity: true },
     }),
-    db.promotion.aggregate({ where: activePromoWhere(), _sum: { bonusCents: true }, _count: true }),
+    db.promotion.aggregate({ where: activePromoWhere(), _sum: { bonusCents: true, workedCount: true }, _count: true }),
     db.promotion.count({ where: { ...activePromoWhere(), requiresPayroll: true } }),
     db.promotion.findMany({
       where: activePromoWhere(),
@@ -109,6 +109,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               <span className="text-sm text-white/90">Puedes ganar hasta</span>
               <span className="text-2xl font-extrabold text-accent">{fmtEuros(totals._sum.bonusCents ?? 0)}</span>
               <span className="text-sm text-white/90">si haces las {totals._count} ofertas</span>
+            </p>
+          )}
+          {(totals._sum.workedCount ?? 0) > 0 && (
+            <p className="inline-flex items-baseline gap-x-2 rounded-xl bg-white/10 px-4 py-3">
+              <span className="text-2xl font-extrabold text-accent">{totals._sum.workedCount}</span>
+              <span className="text-sm text-white/90">
+                {totals._sum.workedCount === 1 ? "bono cobrado, confirmado por usuarios" : "bonos cobrados, confirmados por usuarios"}
+              </span>
             </p>
           )}
             <Link href="/como-funciona" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-white underline decoration-accent decoration-2 underline-offset-4 hover:text-accent">
