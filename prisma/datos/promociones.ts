@@ -9,7 +9,7 @@
 import type { Category, Effort, PromoStatus, PrismaClient, RewardType, RiskLevel } from "../../src/generated/prisma/client";
 
 interface PromoDef {
-  entity: { slug: string; name: string; category: Category; website: string; color: string; linkDomains?: string[] };
+  entity: { slug: string; name: string; category: Category; website: string; color: string; linkDomains?: string[]; logoUrl?: string };
   slug: string;
   title: string;
   bonusText: string;
@@ -34,7 +34,7 @@ const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
 
 const PROMOS: PromoDef[] = [
   {
-    entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5" },
+    entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5", logoUrl: "https://www.google.com/s2/favicons?domain=bbva.es&sz=128" },
     slug: "bbva-invita-a-un-amigo",
     effort: "SPEND",
     requirementText: "Pagar con la tarjeta Aqua",
@@ -56,7 +56,7 @@ const PROMOS: PromoDef[] = [
     status: "ACTIVE",
   },
   {
-    entity: { slug: "openbank", name: "Openbank", category: "BANCO", website: "https://www.openbank.es", color: "#D9254C" },
+    entity: { slug: "openbank", name: "Openbank", category: "BANCO", website: "https://www.openbank.es", color: "#D9254C", logoUrl: "https://www.google.com/s2/favicons?domain=openbank.es&sz=128" },
     slug: "openbank-invita-a-tus-amigos",
     requiredCents: 7000,
     effort: "DEPOSIT",
@@ -80,7 +80,7 @@ const PROMOS: PromoDef[] = [
     featured: true,
   },
   {
-    entity: { slug: "myinvestor", name: "MyInvestor", category: "BROKER", website: "https://myinvestor.es", color: "#2B2D42" },
+    entity: { slug: "myinvestor", name: "MyInvestor", category: "BROKER", website: "https://myinvestor.es", color: "#2B2D42", logoUrl: "https://www.google.com/s2/favicons?domain=myinvestor.es&sz=128" },
     slug: "myinvestor-plan-amigo",
     requiredCents: 100000,
     effort: "DEPOSIT",
@@ -101,7 +101,7 @@ const PROMOS: PromoDef[] = [
     status: "ACTIVE",
   },
   {
-    entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
+    entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A", logoUrl: "https://www.google.com/s2/favicons?domain=mintos.com&sz=128" },
     slug: "mintos-invita-a-un-amigo",
     requiredCents: 100000,
     effort: "INVEST",
@@ -123,7 +123,7 @@ const PROMOS: PromoDef[] = [
     status: "ACTIVE",
   },
   {
-    entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
+    entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C", logoUrl: "https://www.google.com/s2/favicons?domain=robinhood.com&sz=128" },
     slug: "robinhood-cripto-invitacion",
     requiredCents: 1000,
     effort: "DEPOSIT",
@@ -145,28 +145,29 @@ const PROMOS: PromoDef[] = [
     status: "ACTIVE",
   },
   {
-    entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F" },
+    entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F", logoUrl: "https://www.google.com/s2/favicons?domain=revolut.com&sz=128" },
     slug: "revolut-invitacion",
     effort: "SPEND",
-    requirementText: "Recargar y pagar con la tarjeta",
+    requirementText: "Abrir la cuenta con el enlace",
     rewardType: "CASH",
     title: "Revolut: abre tu cuenta con invitación",
-    bonusText: "70 € si cumples los requisitos",
-    bonusCents: 7000,
+    // Según la ayuda oficial de Revolut, la recompensa del programa de invitación es para quien invita.
+    bonusText: "Sin bono confirmado para ti",
+    bonusCents: 0,
     summary:
-      "Abre tu cuenta de Revolut con el enlace de invitación y consigue 70 € al cumplir todos los requisitos. Las condiciones exactas aparecen en la app al registrarte.",
+      "Según la ayuda oficial de Revolut, la recompensa de su programa de invitación es para quien invita (aquí, el propietario de Bonificados), no para el nuevo cliente. A veces Revolut muestra en la app campañas con premio también para quien se registra: si al abrir tu cuenta ves una, sus condiciones son las que valen. Úsalo si ya querías una cuenta de Revolut.",
     steps: [
-      "Regístrate con el enlace de invitación y verifica tu identidad con DNI o NIE",
-      "Recarga la cuenta con una transferencia desde otro banco",
-      "Pide la tarjeta física",
-      "Haz las compras con tarjeta que indique la app (apuestas, tarjetas regalo y transferencias no cuentan)",
+      "Regístrate con el enlace de invitación y verifica tu identidad",
+      "Si la app te muestra una campaña con premio para ti, revisa sus condiciones antes de seguir",
+      "Para que la invitación cuente: añade dinero con tarjeta o transferencia (las de otros clientes de Revolut no cuentan), pide la tarjeta física y haz los pagos que indique la campaña",
+      "No cuentan apuestas, tarjetas regalo, cambio de divisas ni transferencias",
     ],
-    termsUrl: "https://www.revolut.com/es-ES/legal/referrals-terms/",
+    termsUrl: "https://help.revolut.com/es-ES/help/referrals/more-help-with-referrals/referrals-new/what-are-the-conditions-of-the-referral-campaign/",
     expiresAt: null,
-    status: "DRAFT",
+    status: "ACTIVE",
   },
   {
-    entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9" },
+    entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9", logoUrl: "https://www.google.com/s2/favicons?domain=kraken.com&sz=128" },
     slug: "kraken-invitacion",
     requiredCents: 20000,
     effort: "INVEST",
@@ -194,7 +195,7 @@ const PROMOS: PromoDef[] = [
       name: "eToro",
       category: "BROKER",
       website: "https://www.etoro.com",
-      color: "#13C636",
+      color: "#13C636", logoUrl: "https://www.google.com/s2/favicons?domain=etoro.com&sz=128",
       linkDomains: ["etoro.tw"],
     },
     slug: "etoro-invitacion",

@@ -41,9 +41,10 @@ describe("comprobaciones de promociones", () => {
     expect(messages(promo({ bonusText: "50 € al abrir cuenta" })).some((m) => m.includes("50 €"))).toBe(true);
   });
 
-  it("detecta importes ausentes y enlaces no https", () => {
-    const m = messages(promo({ bonusCents: 0, termsUrl: "http://ejemplo.com" }));
-    expect(m.some((x) => x.includes("Falta el importe"))).toBe(true);
+  it("detecta ofertas sin recompensa para el invitado, importes inválidos y enlaces no https", () => {
+    expect(messages(promo({ bonusText: "Sin bono confirmado para ti", bonusCents: 0 })).some((x) => x.includes("No hay recompensa"))).toBe(true);
+    const m = messages(promo({ bonusCents: -5, termsUrl: "http://ejemplo.com" }));
+    expect(m.some((x) => x.includes("no es válido"))).toBe(true);
     expect(m.some((x) => x.includes("https"))).toBe(true);
   });
 

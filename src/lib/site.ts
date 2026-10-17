@@ -51,6 +51,8 @@ export const EFFORT_TAGS = {
 export interface FilterablePromo {
   effort: EffortKey;
   rewardType: RewardKey;
+  /** 0 si no hay recompensa confirmada para el nuevo cliente. */
+  bonusCents: number;
   requiredCents: number | null;
   entity: { category: CategoryKey };
 }
@@ -93,9 +95,9 @@ export const FILTER_GROUPS = {
     label: "Recompensa",
     all: "Cualquier recompensa",
     options: {
-      efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.rewardType === "CASH" },
-      cashback: { label: "Cashback", test: (p: FilterablePromo) => p.rewardType === "CASHBACK" },
-      cripto: { label: "En cripto", test: (p: FilterablePromo) => p.rewardType === "CRYPTO" },
+      efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CASH" },
+      cashback: { label: "Cashback", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CASHBACK" },
+      cripto: { label: "En cripto", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CRYPTO" },
     },
   },
   cat: {

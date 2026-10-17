@@ -92,7 +92,7 @@ export default async function PromoPage({ params }: Props) {
               </div>
               <div>
                 <dt className="text-muted">Recibes</dt>
-                <dd className="font-semibold">{REWARD_LABELS[promo.rewardType]}</dd>
+                <dd className="font-semibold">{promo.bonusCents === 0 ? "Nada confirmado" : REWARD_LABELS[promo.rewardType]}</dd>
               </div>
               <div>
                 <dt className="text-muted">Plazo</dt>
@@ -147,7 +147,13 @@ export default async function PromoPage({ params }: Props) {
               Ten en cuenta
             </h2>
             <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 leading-relaxed text-muted">
-              <li>Solo cobras si cumples todos los pasos y plazos. Si falta alguno, {entity.name} puede no pagar la recompensa.</li>
+              {promo.bonusCents === 0 ? (
+                <li className="font-semibold text-ink">
+                  {entity.name} no confirma una recompensa para el nuevo cliente: la de su programa de invitación es para quien invita.
+                </li>
+              ) : (
+                <li>Solo cobras si cumples todos los pasos y plazos. Si falta alguno, {entity.name} puede no pagar la recompensa.</li>
+              )}
               {promo.effort === "INVEST" && (
                 <li className="font-semibold text-ink">
                   Pide invertir: el dinero invertido puede perder valor, y la recompensa no compensa necesariamente esa pérdida.
@@ -177,7 +183,7 @@ export default async function PromoPage({ params }: Props) {
 
           {active && (
             <section className="card flex flex-col gap-4 p-4 sm:p-6">
-              <WorkedButton promotionId={promo.id} entityName={entity.name} initialCount={promo.workedCount} />
+              {promo.bonusCents > 0 && <WorkedButton promotionId={promo.id} entityName={entity.name} initialCount={promo.workedCount} />}
               <div className="flex flex-col gap-1 border-t border-line pt-3">
                 <details id="opinar" className="scroll-mt-20 text-sm">
                   <summary className="inline-flex min-h-10 cursor-pointer list-none items-center font-semibold text-brand underline underline-offset-2 [&::-webkit-details-marker]:hidden">
@@ -207,12 +213,14 @@ function CodePanel({
   promo,
   active,
 }: {
-  promo: { id: string; termsUrl: string; entity: { slug: string; name: string; website: string } };
+  promo: { id: string; termsUrl: string; bonusCents: number; entity: { slug: string; name: string; website: string } };
   active: boolean;
 }) {
   return (
     <div id="codigo" className="card scroll-mt-20 border-2 border-brand/40 p-4 shadow-sm sm:p-5">
-      <h2 className="text-lg font-bold">{active ? "Conseguir la recompensa" : "Código de invitación"}</h2>
+      <h2 className="text-lg font-bold">
+        {!active ? "Código de invitación" : promo.bonusCents === 0 ? "Abrir la cuenta con invitación" : "Conseguir la recompensa"}
+      </h2>
       {active ? (
         <>
           <p className="hint mb-3 mt-1">

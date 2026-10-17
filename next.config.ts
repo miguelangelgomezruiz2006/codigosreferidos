@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   poweredByHeader: false,
+  images: {
+    // Logos de las entidades: se piden al servicio público de iconos de Google y se sirven desde esta web,
+    // así el navegador del visitante no se conecta a terceros.
+    remotePatterns: [
+      { protocol: "https", hostname: "www.google.com", pathname: "/s2/favicons" },
+      { protocol: "https", hostname: "*.gstatic.com", pathname: "/faviconV2" },
+    ],
+  },
   async headers() {
     const security = [
       { key: "X-Content-Type-Options", value: "nosniff" },

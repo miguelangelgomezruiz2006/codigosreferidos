@@ -42,7 +42,8 @@ export function checkPromotion(p: CheckablePromo, now = new Date()): CheckIssue[
   const issues: CheckIssue[] = [];
   const add = (level: CheckLevel, message: string) => issues.push({ level, message });
 
-  if (!Number.isInteger(p.bonusCents) || p.bonusCents <= 0) add("error", "Falta el importe de la recompensa en euros.");
+  if (!Number.isInteger(p.bonusCents) || p.bonusCents < 0) add("error", "El importe de la recompensa no es válido.");
+  else if (p.bonusCents === 0) add("aviso", "No hay recompensa confirmada para el nuevo cliente: el texto de la tarjeta debe decirlo claramente.");
   const textAmount = firstEuroAmountCents(p.bonusText);
   if (textAmount !== null && p.bonusCents > 0 && textAmount !== p.bonusCents) {
     add("error", `El texto dice ${textAmount / 100} € pero el importe guardado es ${p.bonusCents / 100} €.`);
