@@ -8,6 +8,7 @@ import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
+import { guideFor } from "@/lib/signup-guides";
 import { CATEGORY_LABELS, SITE_NAME } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -49,8 +50,8 @@ export default async function PromoPage({ params }: Props) {
         <span className="text-ink">{entity.name}</span>
       </nav>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
-          <header className="card p-5 lg:col-start-1">
+      <div className="mt-4 grid gap-4 sm:gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
+          <header className="card p-4 sm:p-5 lg:col-start-1">
             <div className="flex items-center gap-3">
               <EntityLogo name={entity.name} logoUrl={entity.logoUrl} color={entity.color} size={56} />
               <div>
@@ -81,7 +82,7 @@ export default async function PromoPage({ params }: Props) {
         <div className="flex flex-col gap-6 lg:col-start-1">
 
           {promo.steps.length > 0 && (
-            <section className="card p-5" aria-labelledby="pasos">
+            <section className="card p-4 sm:p-5" aria-labelledby="pasos">
               <h2 id="pasos" className="text-lg font-bold">Qué tienes que hacer</h2>
               <ol className="mt-4 flex flex-col gap-4">
                 {promo.steps.map((step, i) => (
@@ -95,7 +96,7 @@ export default async function PromoPage({ params }: Props) {
           )}
 
           <section className="card flex flex-col gap-3 p-5 text-sm">
-            <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-ghost self-start">
+            <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-ghost w-full text-center sm:w-auto sm:self-start">
               Ver condiciones oficiales en la web de {entity.name} ↗
             </a>
             {promo.lastReviewedAt && <p className="text-muted">Revisada por última vez el {fmtDate(promo.lastReviewedAt)}.</p>}
@@ -118,12 +119,18 @@ export default async function PromoPage({ params }: Props) {
   );
 }
 
-function CodePanel({ promo, active }: { promo: { id: string; entity: { name: string } }; active: boolean }) {
+function CodePanel({
+  promo,
+  active,
+}: {
+  promo: { id: string; entity: { slug: string; name: string; website: string } };
+  active: boolean;
+}) {
   return (
-    <div className="card border-2 border-brand/30 p-5 shadow-sm">
+    <div id="codigo" className="card scroll-mt-20 border-2 border-brand/30 p-4 shadow-sm sm:p-5">
       <h2 className="mb-3 text-lg font-bold">Tu código de invitación</h2>
       {active ? (
-        <CodeBox promotionId={promo.id} entityName={promo.entity.name} siteName={SITE_NAME} />
+        <CodeBox promotionId={promo.id} entityName={promo.entity.name} siteName={SITE_NAME} guide={guideFor(promo.entity)} />
       ) : (
         <p className="note note-warn">Esta promoción ha caducado. Mira las <Link href="/" className="underline">promociones activas</Link>.</p>
       )}

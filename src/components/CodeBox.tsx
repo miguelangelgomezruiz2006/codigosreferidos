@@ -2,8 +2,23 @@
 import { useState, useTransition } from "react";
 import { reportAction, revealAction, trackAction } from "@/app/actions/public";
 import type { RevealedCode } from "@/lib/codes";
+import type { SignupGuide } from "@/lib/signup-guides";
 
-export function CodeBox({ promotionId, entityName, siteName }: { promotionId: string; entityName: string; siteName: string }) {
+function StepNum({ n }: { n: number }) {
+  return <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand text-sm font-bold text-white">{n}</span>;
+}
+
+export function CodeBox({
+  promotionId,
+  entityName,
+  siteName,
+  guide,
+}: {
+  promotionId: string;
+  entityName: string;
+  siteName: string;
+  guide: SignupGuide;
+}) {
   const [code, setCode] = useState<RevealedCode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -58,36 +73,77 @@ export function CodeBox({ promotionId, entityName, siteName }: { promotionId: st
     );
   }
 
+  const codeValue = code.code && (
+    <div className="flex items-stretch gap-2">
+      <span
+        id="code-value"
+        className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-lg border-2 border-dashed border-brand bg-brand-soft px-3 font-mono text-lg font-bold tracking-wider break-all text-brand-dark select-all"
+      >
+        {code.code}
+      </span>
+      <button type="button" className="btn btn-primary shrink-0" onClick={copy}>
+        {copied ? "¡Copiado!" : "Copiar"}
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-3" aria-live="polite">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted">
         {code.kind === "ADMIN" ? `Código de ${siteName}` : "Código de la comunidad"}
       </p>
 
-      {code.code && (
-        <div className="flex items-stretch gap-2">
-          <span
-            id="code-value"
-            className="flex min-h-12 flex-1 items-center justify-center rounded-lg border-2 border-dashed border-brand bg-brand-soft px-3 font-mono text-lg font-bold tracking-wider break-all text-brand-dark select-all"
-          >
-            {code.code}
-          </span>
-          <button type="button" className="btn btn-primary" onClick={copy}>
-            {copied ? "¡Copiado!" : "Copiar"}
-          </button>
-        </div>
-      )}
-
-      {code.link && (
-        <a
-          href={code.link}
-          target="_blank"
-          rel="noopener noreferrer nofollow sponsored"
-          className={`btn w-full ${code.code ? "btn-ghost" : "btn-primary"}`}
-          onClick={() => void trackAction(code.id, "OPEN")}
-        >
-          Abrir enlace de invitación de {entityName} ↗
-        </a>
+      {code.code && !code.link ? (
+        // Solo código: guía en tres pasos para saber a dónde ir y cuándo pegarlo.
+        <ol className="flex flex-col gap-4">
+          <li className="flex gap-3">
+            <StepNum n={1} />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <p className="pt-0.5 font-semibold">Copia el código</p>
+              {codeValue}
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <StepNum n={2} />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <p className="pt-0.5 font-semibold">Abre tu cuenta en {entityName}</p>
+              <p className="hint">{guide.where}</p>
+              <a href={guide.signupUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-primary w-full">
+                {guide.signupLabel} ↗
+              </a>
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <StepNum n={3} />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <p className="pt-0.5 font-semibold">Pega el código durante el alta</p>
+              <p className="text-sm leading-relaxed">{guide.codeMoment}</p>
+              <p className="note note-warn">
+                <strong>Importante:</strong> mételo antes de terminar el registro. Si te lo saltas, la entidad puede no pagarte el bono.
+              </p>
+            </div>
+          </li>
+        </ol>
+      ) : (
+        <>
+          {code.code && codeValue}
+          {code.link && (
+            <a
+              href={code.link}
+              target="_blank"
+              rel="noopener noreferrer nofollow sponsored"
+              className={`btn w-full ${code.code ? "btn-ghost" : "btn-primary"}`}
+              onClick={() => void trackAction(code.id, "OPEN")}
+            >
+              Abrir enlace de invitación de {entityName} ↗
+            </a>
+          )}
+          <p className="hint">
+            {code.code
+              ? "El enlace ya lleva el código dentro. Si durante el alta te lo piden, pega el de arriba."
+              : "Haz todo el registro desde este enlace, sin salir, para que la invitación cuente. En el móvil, ábrelo y te llevará a la app."}
+          </p>
+        </>
       )}
 
       {reportMsg && <p className="note note-ok">{reportMsg}</p>}

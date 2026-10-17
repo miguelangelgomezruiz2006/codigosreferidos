@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { MobileMenu } from "@/components/MobileMenu";
 import { getCurrentUser } from "@/lib/session";
 import { SITE_NAME, SITE_TAGLINE, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -27,8 +28,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Saltar al contenido
         </a>
         <header className="sticky top-0 z-20 border-b border-brand-dark/20 bg-brand text-white">
-          <div className="wrap flex min-h-14 items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+          <div className="wrap flex min-h-14 items-center gap-2 sm:gap-3">
+            <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-extrabold tracking-tight">
               <span aria-hidden className="grid size-7 place-items-center rounded-md bg-accent text-sm font-black text-ink">€</span>
               {SITE_NAME}
             </Link>
@@ -44,9 +45,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   Admin
                 </Link>
               )}
-              <Link href="/mi-panel" className="rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25">
+              <Link href="/mi-panel" className="whitespace-nowrap rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25">
                 {user ? "Mis códigos" : "Añadir mi código"}
               </Link>
+              <MobileMenu />
             </nav>
           </div>
         </header>

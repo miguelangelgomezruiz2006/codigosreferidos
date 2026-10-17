@@ -41,22 +41,27 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <>
-      <section className="bg-brand pb-8 pt-6 text-white">
+      <section className="bg-brand pb-7 pt-6 text-white sm:pb-8">
         <div className="wrap">
-          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl">
+          <h1 className="max-w-2xl text-[28px] font-extrabold leading-tight sm:text-4xl">
             Gana dinero con las promociones de bancos y fintechs
           </h1>
           <p className="mt-3 max-w-2xl text-white/85">
             Requisitos explicados paso a paso y un código de invitación listo para copiar. Sin registrarte.
           </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
           {totals._count > 0 && (
-            <p className="mt-5 inline-flex flex-wrap items-baseline gap-x-2 rounded-xl bg-white/10 px-4 py-3">
+            <p className="inline-flex flex-wrap items-baseline gap-x-2 rounded-xl bg-white/10 px-4 py-3">
               <span className="text-2xl font-extrabold text-accent">{fmtEuros(totals._sum.bonusCents ?? 0)}</span>
               <span className="text-sm text-white/85">
                 en bonos sumando las {totals._count} promociones activas
               </span>
             </p>
           )}
+            <Link href="/como-funciona" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-white underline decoration-accent decoration-2 underline-offset-4 hover:text-accent">
+              ¿Cómo funciona? Te lo explicamos en 1 minuto →
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -72,13 +77,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               </Link>
             ))}
           </nav>
-          <nav aria-label="Ordenar" className="flex items-center gap-1 text-sm">
+          <nav aria-label="Ordenar" className="-mx-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap px-4 text-sm sm:mx-0 sm:px-0">
             <span className="text-muted">Ordenar:</span>
             {Object.entries(SORTS).map(([key, s]) => (
               <Link
                 key={key}
                 href={link({ orden: key })}
-                className={`rounded-md px-2 py-1 ${sortKey === key ? "bg-brand-soft font-semibold text-brand-dark" : "text-muted hover:text-ink"}`}
+                className={`rounded-md px-2 py-2 ${sortKey === key ? "bg-brand-soft font-semibold text-brand-dark" : "text-muted hover:text-ink"}`}
                 aria-current={sortKey === key ? "true" : undefined}
               >
                 {s.label}
@@ -102,7 +107,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </ul>
         )}
 
-        <section className="card mt-10 grid gap-4 p-5 sm:grid-cols-3">
+        <section className="card mt-10 p-5" aria-labelledby="como">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="como" className="text-lg font-bold">Cómo funciona</h2>
+            <Link href="/como-funciona" className="text-sm font-semibold text-brand underline-offset-2 hover:underline">Guía completa →</Link>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {[
             ["1", "Elige una promoción", "Ordenadas por bono. Cada ficha explica los requisitos sin letra pequeña."],
             ["2", "Copia el código", "Te damos un código de invitación que funciona. Si falla, pide otro con un toque."],
@@ -116,6 +126,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               </div>
             </div>
           ))}
+          </div>
         </section>
       </div>
     </>
