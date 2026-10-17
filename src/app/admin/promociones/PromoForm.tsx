@@ -14,6 +14,7 @@ interface PromoValues {
   termsUrl: string;
   expiresAt: Date | null;
   status: "DRAFT" | "ACTIVE" | "EXPIRED";
+  risk: "NONE" | "INVESTMENT" | "CRYPTO";
 }
 
 const STEPS_PLACEHOLDER = [
@@ -88,6 +89,14 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
           <label htmlFor="p-x">Caduca el (opcional)</label>
           <input id="p-x" name="expiresAt" type="date" className="input" defaultValue={toDateInput(promo?.expiresAt)} />
         </div>
+      </div>
+      <div className="field">
+        <label htmlFor="p-r">Aviso de riesgo en la ficha</label>
+        <select id="p-r" name="risk" className="input" defaultValue={promo?.risk ?? "NONE"}>
+          <option value="NONE">Ninguno (cuentas bancarias)</option>
+          <option value="INVESTMENT">Inversión: puedes perder dinero</option>
+          <option value="CRYPTO">Criptomonedas: riesgo alto</option>
+        </select>
       </div>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="reviewed" defaultChecked className="size-4" /> He revisado las condiciones oficiales hoy

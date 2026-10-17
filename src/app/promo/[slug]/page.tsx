@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
 import { ExpiryLabel } from "@/components/PromoCard";
+import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
@@ -62,6 +63,11 @@ export default async function PromoPage({ params }: Props) {
               <ExpiryLabel expiresAt={promo.expiresAt} expired={!active} />
             </div>
             {promo.summary && <p className="mt-4 leading-relaxed">{promo.summary}</p>}
+            {promo.risk !== "NONE" && (
+              <div className="mt-4">
+                <RiskNotice risk={promo.risk} />
+              </div>
+            )}
           </header>
 
         {/* En el móvil, el código va justo después de la cabecera; en el ordenador, fijo a la derecha. */}

@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { SITE_NAME, SITE_TAGLINE, siteUrl } from "@/lib/site";
 import "./globals.css";
 
+const DESCRIPTION =
+  "Promociones de bienvenida de bancos, brokers y fintechs en España, con los requisitos explicados paso a paso y códigos de invitación que funcionan.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
+  applicationName: SITE_NAME,
+  openGraph: { type: "website", locale: "es_ES", siteName: SITE_NAME, title: `${SITE_NAME} · ${SITE_TAGLINE}`, description: DESCRIPTION },
+  twitter: { card: "summary_large_image" },
   title: { default: `${SITE_NAME} · ${SITE_TAGLINE}`, template: `%s · ${SITE_NAME}` },
-  description:
-    "Promociones de bienvenida de bancos, brokers y fintechs en España, con los requisitos explicados paso a paso y códigos de invitación que funcionan.",
+  description: DESCRIPTION,
 };
 
 export const viewport: Viewport = { themeColor: "#0e6b5c", width: "device-width", initialScale: 1 };

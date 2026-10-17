@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EntityLogo } from "@/components/EntityLogo";
+import { RiskBadge } from "@/components/RiskNotice";
 import { daysLeft, fmtShortDate } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/site";
 
@@ -8,6 +9,7 @@ export interface PromoCardData {
   title: string;
   bonusText: string;
   expiresAt: Date | null;
+  risk?: "NONE" | "INVESTMENT" | "CRYPTO";
   entity: { name: string; logoUrl: string | null; color: string; category: keyof typeof CATEGORY_LABELS };
   codeCount: number;
   expired?: boolean;
@@ -36,6 +38,11 @@ export function PromoCard({ p }: { p: PromoCardData }) {
       </div>
       <p className={`text-2xl font-extrabold leading-tight ${p.expired ? "text-muted line-through" : "text-brand"}`}>{p.bonusText}</p>
       <p className="text-sm leading-snug">{p.title}</p>
+      {p.risk && p.risk !== "NONE" && (
+        <div>
+          <RiskBadge risk={p.risk} />
+        </div>
+      )}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
         <ExpiryLabel expiresAt={p.expiresAt} expired={p.expired} />
         {!p.expired && (

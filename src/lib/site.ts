@@ -14,3 +14,10 @@ export type CategoryKey = keyof typeof CATEGORY_LABELS;
 export function isCategory(v: string | undefined): v is CategoryKey {
   return !!v && v in CATEGORY_LABELS;
 }
+
+/** Dirección pública de la web (para Google, enlaces compartidos y emails). */
+export function siteUrl(path = ""): string {
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
+  const base = (process.env.AUTH_URL || process.env.SITE_URL || vercel || "http://localhost:3000").replace(/\/$/, "");
+  return `${base}${path}`;
+}

@@ -30,6 +30,13 @@ enum PromoStatus {
 
 // ADMIN: códigos del dueño de la web, con prioridad y límite de usos.
 // COMMUNITY: códigos que añaden los usuarios registrados.
+// Aviso de riesgo que se muestra en la ficha.
+enum RiskLevel {
+  NONE
+  INVESTMENT
+  CRYPTO
+}
+
 enum CodeKind {
   ADMIN
   COMMUNITY
@@ -124,6 +131,7 @@ model Promotion {
   termsUrl       String
   expiresAt      DateTime?
   status         PromoStatus    @default(DRAFT)
+  risk           RiskLevel      @default(NONE)
   lastReviewedAt DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

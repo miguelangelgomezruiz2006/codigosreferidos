@@ -72,6 +72,7 @@ const promoSchema = z.object({
   summary: z.string().trim().max(1000),
   termsUrl: httpsUrl,
   status: z.enum(["DRAFT", "ACTIVE", "EXPIRED"]),
+  risk: z.enum(["NONE", "INVESTMENT", "CRYPTO"]),
 });
 
 export async function savePromotionAction(_prev: FormState, form: FormData): Promise<FormState> {
@@ -83,6 +84,7 @@ export async function savePromotionAction(_prev: FormState, form: FormData): Pro
     summary: str(form, "summary"),
     termsUrl: str(form, "termsUrl"),
     status: str(form, "status"),
+    risk: str(form, "risk") || "NONE",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const bonusCents = parseEurosToCents(str(form, "bonusEuros") || "0");

@@ -6,7 +6,7 @@
  * `lastReviewedAt` se deja vacío a propósito: la fecha de revisión la marca el
  * administrador desde el panel cuando haya comprobado las condiciones oficiales.
  */
-import type { Category, PromoStatus, PrismaClient } from "../../src/generated/prisma/client";
+import type { Category, PromoStatus, PrismaClient, RiskLevel } from "../../src/generated/prisma/client";
 
 interface PromoDef {
   entity: { slug: string; name: string; category: Category; website: string; color: string };
@@ -19,6 +19,7 @@ interface PromoDef {
   termsUrl: string;
   expiresAt: Date | null;
   status: PromoStatus;
+  risk?: RiskLevel;
 }
 
 const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
@@ -77,6 +78,7 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://myinvestor.es",
     expiresAt: null,
     status: "ACTIVE",
+    risk: "INVESTMENT",
   },
   {
     entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
@@ -95,6 +97,7 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://www.mintos.com/en/mintos-referral-program/",
     expiresAt: null,
     status: "ACTIVE",
+    risk: "INVESTMENT",
   },
   {
     entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
@@ -112,6 +115,7 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://robinhood.com/eu/en/",
     expiresAt: null,
     status: "ACTIVE",
+    risk: "CRYPTO",
   },
   {
     entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F" },
@@ -150,6 +154,7 @@ export async function loadPromotions(db: PrismaClient) {
       termsUrl: p.termsUrl,
       expiresAt: p.expiresAt,
       status: p.status,
+      risk: p.risk ?? "NONE",
       lastReviewedAt: null,
     };
     if (existing) await db.promotion.update({ where: { id: existing.id }, data });
