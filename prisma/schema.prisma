@@ -1,0 +1,242 @@
+// Modelo de datos de la web de códigos de referido.
+// Las bonificaciones se guardan en céntimos (enteros) para poder ordenarlas sin decimales.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  BANCO
+  NEOBANCO
+  BROKER
+  INVERSION
+}
+
+enum PromoStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+}
+
+// ADMIN: códigos del dueño de la web, con prioridad y límite de usos.
+// COMMUNITY: códigos que añaden los usuarios registrados.
+enum CodeKind {
+  ADMIN
+  COMMUNITY
+}
+
+enum CodeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum EventType {
+  REVEAL
+  COPY
+  OPEN
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  role          Role           @default(USER)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime       @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  codes         ReferralCode[]
+}
+
+// Tablas de Auth.js (inicio de sesión con enlace por email).
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Banco, broker o fintech.
+model Entity {
+  id         String      @id @default(cuid())
+  slug       String      @unique
+  name       String
+  category   Category
+  website    String
+  // Dominios extra válidos para los enlaces de referido (además del de `website`).
+  linkDomains String[]   @default([])
+  logoUrl    String?
+  color      String      @default("#0E6B5C")
+  createdAt  DateTime    @default(now())
+  promotions Promotion[]
+}
+
+model Promotion {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  entityId       String
+  entity         Entity         @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  title          String
+  bonusText      String
+  bonusCents     Int            @default(0)
+  summary        String         @default("")
+  steps          String[]       @default([])
+  termsUrl       String
+  expiresAt      DateTime?
+  status         PromoStatus    @default(DRAFT)
+  lastReviewedAt DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  codes          ReferralCode[]
+  events         CodeEvent[]
+  assignments    Assignment[]
+
+  @@index([status])
+}
+
+model ReferralCode {
+  id          String       @id @default(cuid())
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  // Vacío en los códigos del administrador.
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        CodeKind
+  code        String?
+  link        String?
+  // Solo códigos ADMIN: nº máximo de usos (vacío = sin límite) y orden (menor = antes).
+  maxUses     Int?
+  priority    Int          @default(0)
+  status      CodeStatus   @default(PENDING)
+  timesShown  Int          @default(0)
+  timesCopied Int          @default(0)
+  timesOpened Int          @default(0)
+  // Usos reales: visitantes distintos que han copiado el código o abierto el enlace.
+  uses        Int          @default(0)
+  reportCount Int          @default(0)
+  createdAt   DateTime     @default(now())
+  reports     CodeReport[]
+  events      CodeEvent[]
+  usesBy      CodeUse[]
+  assignments Assignment[]
+
+  // Máximo un código por usuario y promoción (los del administrador no tienen usuario).
+  @@unique([promotionId, userId])
+  @@index([promotionId, status])
+}
+
+// Qué código se ha mostrado a cada visitante en cada promoción, para que al
+// recargar la página vea el mismo y no se gaste la rotación.
+model Assignment {
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  visitorId   String
+  codeId      String
+  code        ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  updatedAt   DateTime     @updatedAt
+
+  @@id([promotionId, visitorId])
+}
+
+model CodeUse {
+  codeId    String
+  code      ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  visitorId String
+  createdAt DateTime     @default(now())
+
+  @@id([codeId, visitorId])
+}
+
+model CodeReport {
+  id          String       @id @default(cuid())
+  codeId      String
+  code        ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  // Usuario o visitante anónimo que reporta. Un reporte por persona y código.
+  reporterKey String
+  reason      String       @default("")
+  createdAt   DateTime     @default(now())
+
+  @@unique([codeId, reporterKey])
+}
+
+model CodeEvent {
+  id          String       @id @default(cuid())
+  codeId      String
+  code        ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  type        EventType
+  createdAt   DateTime     @default(now())
+
+  @@index([promotionId, createdAt])
+  @@index([codeId])
+}
+
+// Ajustes de la web (una sola fila, id = 1).
+model Settings {
+  id              Int     @id @default(1)
+  reportThreshold Int     @default(3)
+  requireApproval Boolean @default(true)
+  ownerName       String  @default("")
+  ownerNif        String  @default("")
+  ownerAddress    String  @default("")
+  contactEmail    String  @default("")
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  html      String
+  text      String
+  via       String
+  createdAt DateTime @default(now())
+
+  @@index([to])
+}
+
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+}

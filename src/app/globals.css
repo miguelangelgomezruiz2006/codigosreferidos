@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #0e6b5c;
+  --color-brand-dark: #0a4f44;
+  --color-brand-soft: #e3f1ec;
+  --color-accent: #f2b33d;
+  --color-accent-soft: #fdf3dd;
+  --color-ink: #13261f;
+  --color-muted: #566a61;
+  --color-line: #d7e2dc;
+  --color-bg: #f3f6f4;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-5xl px-4;
+  }
+  .card {
+    @apply rounded-xl border border-line bg-white;
+  }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+  .btn-accent {
+    @apply bg-accent text-ink hover:brightness-95;
+  }
+  .btn-ghost {
+    @apply border border-line bg-white text-ink hover:bg-bg;
+  }
+  .btn-danger {
+    @apply border border-danger/30 bg-white text-danger hover:bg-danger-soft;
+  }
+  .btn-sm {
+    @apply min-h-9 px-3 py-1 text-sm;
+  }
+  .field {
+    @apply flex flex-col gap-1;
+  }
+  .field label {
+    @apply text-sm font-semibold;
+  }
+  .input {
+    @apply min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-base text-ink placeholder:text-muted/70;
+  }
+  .hint {
+    @apply text-sm text-muted;
+  }
+  .note {
+    @apply rounded-lg border px-3 py-2 text-sm;
+  }
+  .note-ok {
+    @apply border-brand/30 bg-brand-soft text-brand-dark;
+  }
+  .note-warn {
+    @apply border-accent/50 bg-accent-soft text-ink;
+  }
+  .note-err {
+    @apply border-danger/30 bg-danger-soft text-danger;
+  }
+  .chip {
+    @apply inline-flex min-h-9 items-center rounded-full border border-line bg-white px-3 text-sm font-medium text-ink hover:border-brand;
+  }
+  .chip-on {
+    @apply border-brand bg-brand text-white hover:border-brand;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
+  }
+  .prose-legal h2 {
+    @apply mt-6 mb-2 text-lg font-bold;
+  }
+  .prose-legal p,
+  .prose-legal li {
+    @apply mb-2 leading-relaxed;
+  }
+  .prose-legal ul {
+    @apply list-disc pl-5;
+  }
+  .table {
+    @apply w-full border-collapse text-sm;
+  }
+  .table th {
+    @apply border-b border-line px-2 py-2 text-left font-semibold whitespace-nowrap text-muted;
+  }
+  .table td {
+    @apply border-b border-line px-2 py-2 align-top;
+  }
+}
