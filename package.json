@@ -16,6 +16,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:init": "tsx prisma/init.ts",
+    "db:promociones": "tsx prisma/promociones.ts",
     "db:mis-codigos": "tsx prisma/mis-codigos.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

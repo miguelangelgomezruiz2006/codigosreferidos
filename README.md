@@ -20,6 +20,7 @@ npm run db:local        # arranca una base de datos PostgreSQL local (muestra su
 cp .env.example .env    # y rellena DATABASE_URL, SHADOW_DATABASE_URL, AUTH_SECRET y ADMIN_EMAIL
 npm run db:migrate      # crea las tablas
 npm run db:seed         # carga datos de EJEMPLO (borra lo que haya; solo funciona en local)
+npm run db:promociones  # carga las promociones reales (prisma/promociones.ts)
 npm run db:mis-codigos  # carga tus códigos (prisma/mis-codigos.ts)
 npm run dev             # abre http://localhost:3000
 ```
@@ -46,6 +47,7 @@ npm run typecheck
    ```bash
    npx prisma migrate deploy
    npm run db:init
+   npm run db:promociones
    npm run db:mis-codigos
    ```
 4. Entra con tu email y crea las promociones reales desde Administración.

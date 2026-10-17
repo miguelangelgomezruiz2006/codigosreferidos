@@ -25,7 +25,7 @@ export function PromoCard({ p }: { p: PromoCardData }) {
   return (
     <Link
       href={`/promo/${p.slug}`}
-      className="card group flex flex-col gap-3 p-4 transition-shadow hover:shadow-md focus-visible:shadow-md"
+      className="card group flex w-full flex-col gap-3 p-4 transition-shadow hover:shadow-md focus-visible:shadow-md"
     >
       <div className="flex items-center gap-3">
         <EntityLogo name={p.entity.name} logoUrl={p.entity.logoUrl} color={p.entity.color} />
