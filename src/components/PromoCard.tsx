@@ -80,6 +80,7 @@ export function PayrollBadge({ requiresPayroll }: { requiresPayroll?: boolean })
 
 export function PromoCard({ p }: { p: PromoCardData }) {
   const highlighted = p.featured && !p.expired;
+  const soon = p.expiresAt && !p.expired && daysLeft(p.expiresAt) <= 7;
   return (
     <Link
       href={`/promo/${p.slug}`}
@@ -90,19 +91,24 @@ export function PromoCard({ p }: { p: PromoCardData }) {
       {highlighted && <span className="badge absolute -top-3 left-4 bg-accent px-3 py-1 text-ink shadow-sm">★ Opción estrella</span>}
       <div className="flex items-center gap-3">
         <EntityLogo name={p.entity.name} logoUrl={p.entity.logoUrl} color={p.entity.color} />
-        <div className="min-w-0">
-          <p className="font-bold leading-tight">{p.entity.name}</p>
-          <p className="text-xs text-muted">{CATEGORY_LABELS[p.entity.category]}</p>
-        </div>
+        <p className="min-w-0 flex-1 font-bold leading-tight">{p.entity.name}</p>
+        {(soon || p.expired) && (
+          <span className="text-xs">
+            <ExpiryLabel expiresAt={p.expiresAt} expired={p.expired} />
+          </span>
+        )}
       </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">{p.expired ? "Daban" : "Te dan"}</p>
-        <p className={`text-2xl font-extrabold leading-tight ${p.expired ? "text-muted line-through" : "text-brand"}`}>{p.bonusText}</p>
-      </div>
-      <p className="text-sm leading-snug text-muted">{p.title}</p>
+      <p className={`text-2xl font-extrabold leading-tight ${p.expired ? "text-muted line-through" : "text-brand"}`}>{p.bonusText}</p>
+      {!p.expired && p.effort && (
+        <p className="text-sm leading-snug">
+          <span className="text-muted">Qué haces: </span>
+          <strong>{p.requirementText || EFFORT_LABELS[p.effort]}</strong>
+        </p>
+      )}
       {!p.expired && (
         <div className="flex flex-wrap gap-2">
-          <PromoFacts p={p} showPayroll />
+          <PayrollBadge requiresPayroll={p.requiresPayroll} />
+          {p.rewardType && p.rewardType !== "CASH" && <span className="badge bg-bg text-ink">{REWARD_LABELS[p.rewardType]}</span>}
           {p.risk && p.risk !== "NONE" && <RiskBadge risk={p.risk} />}
         </div>
       )}
@@ -111,10 +117,7 @@ export function PromoCard({ p }: { p: PromoCardData }) {
           <WorkedLabel count={p.workedCount} />
         </p>
       ) : null}
-      <div className="mt-auto pt-1 text-xs">
-        <ExpiryLabel expiresAt={p.expiresAt} expired={p.expired} />
-      </div>
-      {!p.expired && <span className="btn btn-primary btn-sm w-full group-hover:bg-brand-dark">Ver cómo conseguirlo →</span>}
+      {!p.expired && <span className="btn btn-primary mt-auto w-full group-hover:bg-brand-dark">Ver código y pasos →</span>}
     </Link>
   );
 }

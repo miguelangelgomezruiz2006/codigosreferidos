@@ -23,9 +23,9 @@ const SORTS = {
 };
 
 const HOW_IT_WORKS = [
-  ["Elige una oferta", "Cada una dice cuánto te dan y qué tienes que hacer."],
-  ["Copia el código", "Lo pegas al abrir la cuenta para que te den el regalo."],
-  ["Sigue los pasos y cobra", "Cuando cumples lo que pide, te ingresan el dinero."],
+  ["Elige una oferta", "Mira cuánto te dan y qué tienes que hacer."],
+  ["Copia el código", "Pégalo al abrir la cuenta."],
+  ["Cumple los pasos y cobra", "Te ingresan el regalo."],
 ];
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ cat?: string; orden?: string; esf?: string }> }) {
@@ -94,44 +94,54 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     ["¿Tengo que declararlo?", "Sí. Estos regalos suelen tributar en la declaración de la renta."],
   ];
 
+  const total = fmtEuros(totals._sum.bonusCents ?? 0);
+  const worked = totals._sum.workedCount ?? 0;
+  const noFilter = !category && !effortFilter;
+  const chips: { key: string; label: string; href: string; on: boolean }[] = [
+    { key: "todas", label: "Todas", href: link({ cat: undefined, esf: undefined }), on: noFilter },
+    ...Object.entries(EFFORT_FILTERS).map(([key, label]) => ({
+      key,
+      label,
+      href: link({ cat: undefined, esf: key }),
+      on: effortFilter === key,
+    })),
+    ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
+      key,
+      label,
+      href: link({ cat: key, esf: undefined }),
+      on: category === key,
+    })),
+  ];
+
   return (
     <>
-      <section className="bg-brand pb-7 pt-6 text-white sm:pb-8">
+      <section className="bg-brand pb-6 pt-6 text-white">
         <div className="wrap">
-          <p className="inline-flex rounded-full bg-accent px-3 py-1 text-sm font-bold text-ink">✓ {allWithoutPayroll ? "Todas sin nómina" : "Ofertas sin nómina"}</p>
-          <h1 className="mt-3 max-w-2xl text-[28px] font-extrabold leading-tight sm:text-4xl">Dinero gratis por abrir cuentas en bancos y apps</h1>
-          <p className="mt-3 max-w-2xl text-lg text-white/90">
-            Sin domiciliar la nómina. Te explicamos qué hacer paso a paso y te damos el código para que te paguen el regalo.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <h1 className="max-w-2xl text-[28px] font-extrabold leading-tight sm:text-4xl">
+            Abre la cuenta con nuestro código y cobra el regalo
+          </h1>
           {totals._count > 0 && (
-            <p className="inline-flex flex-wrap items-baseline gap-x-2 rounded-xl bg-white/10 px-4 py-3">
-              <span className="text-sm text-white/90">Puedes ganar hasta</span>
-              <span className="text-2xl font-extrabold text-accent">{fmtEuros(totals._sum.bonusCents ?? 0)}</span>
-              <span className="text-sm text-white/90">si haces las {totals._count} ofertas</span>
+            <p className="mt-3 max-w-2xl text-lg text-white/90">
+              Hasta <strong className="text-accent">{total}</strong> en {totals._count} ofertas.{" "}
+              {allWithoutPayroll ? "Sin nómina" : "Ofertas sin nómina"} y sin registrarte.
             </p>
           )}
-          {(totals._sum.workedCount ?? 0) > 0 && (
-            <p className="inline-flex items-baseline gap-x-2 rounded-xl bg-white/10 px-4 py-3">
-              <span className="text-2xl font-extrabold text-accent">{totals._sum.workedCount}</span>
-              <span className="text-sm text-white/90">
-                {totals._sum.workedCount === 1 ? "bono cobrado, confirmado por usuarios" : "bonos cobrados, confirmados por usuarios"}
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <a href="#ofertas" className="btn btn-accent">Ver ofertas ↓</a>
+            {worked > 0 && (
+              <span className="font-semibold text-white">
+                ✓ {worked} {worked === 1 ? "bono cobrado" : "bonos cobrados"} y confirmados
               </span>
-            </p>
-          )}
-            <Link href="/como-funciona" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-white underline decoration-accent decoration-2 underline-offset-4 hover:text-accent">
-              ¿Cómo funciona? Te lo explicamos en 1 minuto →
-            </Link>
+            )}
           </div>
           {breakdown.length > 0 && (
-            <details className="group mt-3 max-w-xl text-sm">
-              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-white/85 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
-                ¿De dónde sale esta cifra?
+            <details className="mt-2 max-w-xl text-sm">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-white/80 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
+                ¿De dónde salen los {total}?
               </summary>
               <div className="mt-1 rounded-xl bg-white/10 p-4">
                 <p className="text-white/90">
-                  Es la suma de los bonos anunciados de todas las promociones activas. Solo cobras cada uno si cumples sus requisitos y, normalmente, si
-                  nunca has sido cliente de esa entidad. No es un beneficio garantizado.
+                  Es la suma de todas las ofertas activas. Cobras cada una si cumples sus pasos y, normalmente, si nunca has sido cliente.
                 </p>
                 <ul className="mt-3 grid gap-1">
                   {breakdown.map((b) => (
@@ -140,83 +150,32 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                       <span className="font-semibold tabular-nums">{fmtEuros(b.bonusCents)}</span>
                     </li>
                   ))}
-                  <li className="flex justify-between gap-3 pt-1 font-extrabold text-accent">
-                    <span>Total</span>
-                    <span className="tabular-nums">{fmtEuros(totals._sum.bonusCents ?? 0)}</span>
-                  </li>
                 </ul>
-                {nonCash.length > 0 && (
-                  <p className="mt-3 text-white/80">Incluye premios que no son en efectivo (cashback o criptomonedas): {nonCash.join(", ")}.</p>
-                )}
+                {nonCash.length > 0 && <p className="mt-3 text-white/80">No son en efectivo: {nonCash.join(", ")} (cashback o cripto).</p>}
               </div>
             </details>
           )}
         </div>
       </section>
 
-      <section aria-label="Cómo funciona" className="border-b border-line bg-white">
-        <ol className="wrap grid gap-3 py-4 sm:grid-cols-3">
-          {HOW_IT_WORKS.map(([t, d], i) => (
-            <li key={t} className="flex items-start gap-3">
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-extrabold">{i + 1}</span>
-              <div>
-                <p className="font-bold leading-tight">{t}</p>
-                <p className="hint">{d}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <div className="wrap mt-6">
-        <h2 className="text-xl font-extrabold">Ofertas disponibles</h2>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <nav aria-label="Filtrar por tipo" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-            <Link href={link({ cat: undefined })} className={`chip shrink-0 ${!category ? "chip-on" : ""}`} aria-current={!category ? "page" : undefined}>
-              Todas
+      <div id="ofertas" className="wrap mt-5 scroll-mt-16">
+        <nav aria-label="Filtrar ofertas" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+          {chips.map((c) => (
+            <Link key={c.key} href={c.href} className={`chip shrink-0 ${c.on ? "chip-on" : ""}`} aria-current={c.on ? "true" : undefined}>
+              {c.label}
             </Link>
-            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-              <Link key={key} href={link({ cat: key })} className={`chip shrink-0 ${category === key ? "chip-on" : ""}`} aria-current={category === key ? "page" : undefined}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-          <nav aria-label="Ordenar" className="-mx-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap px-4 text-sm sm:mx-0 sm:px-0">
-            <span className="text-muted">Ordenar:</span>
-            {Object.entries(SORTS).map(([key, s]) => (
-              <Link
-                key={key}
-                href={link({ orden: key })}
-                className={`rounded-md px-2 py-2 ${sortKey === key ? "bg-brand-soft font-semibold text-brand-dark" : "text-muted hover:text-ink"}`}
-                aria-current={sortKey === key ? "true" : undefined}
-              >
-                {s.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <nav aria-label="Filtrar por esfuerzo" className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-          <span className="shrink-0 text-sm text-muted">Filtrar:</span>
-          {Object.entries(EFFORT_FILTERS).map(([key, label]) => {
-            const on = effortFilter === key;
-            return (
-              <Link key={key} href={link({ esf: on ? undefined : key })} className={`chip shrink-0 ${on ? "chip-on" : ""}`} aria-current={on ? "true" : undefined}>
-                {on ? `✕ ${label}` : label}
-              </Link>
-            );
-          })}
+          ))}
         </nav>
 
         {promos.length === 0 ? (
-          <div className="card mt-6 p-6 text-center">
-            <p className="font-semibold">No hay ofertas activas{category || effortFilter ? " con estos filtros" : ""} ahora mismo.</p>
-            <p className="hint mt-1">
-              Vuelve pronto o mira las <Link href="/caducadas" className="underline">ofertas que ya terminaron</Link>.
+          <div className="card mt-5 p-6 text-center">
+            <p className="font-semibold">No hay ofertas con este filtro.</p>
+            <p className="mt-2">
+              <Link href="/" className="btn btn-primary btn-sm">Ver todas</Link>
             </p>
           </div>
         ) : (
-          <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {promos.map((p) => (
               <li key={p.id} className="flex">
                 <PromoCard p={p} />
@@ -225,29 +184,37 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </ul>
         )}
 
-        <Testimonios items={TESTIMONIOS} title="Ya lo han cobrado" className="mt-12" />
+        <section aria-label="Cómo funciona" className="card mt-10 p-4 sm:p-5">
+          <ol className="grid gap-4 sm:grid-cols-3">
+            {HOW_IT_WORKS.map(([t, d], i) => (
+              <li key={t} className="flex items-start gap-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-extrabold">{i + 1}</span>
+                <div>
+                  <p className="font-bold leading-tight">{t}</p>
+                  <p className="hint">{d}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <Testimonios items={TESTIMONIOS} title="Ya lo han cobrado" className="mt-10" />
 
         {reviews.length > 0 && (
-          <section aria-labelledby="opiniones-usuarios" className="mt-8">
-            <h2 id="opiniones-usuarios" className="text-xl font-extrabold">Opiniones de usuarios</h2>
-            <div className="mt-3">
-              <ReviewList items={reviews.map((r) => ({ ...r, entityName: r.promotion.entity.name }))} />
-            </div>
-          </section>
+          <div className="mt-3">
+            <ReviewList items={reviews.map((r) => ({ ...r, entityName: r.promotion.entity.name }))} />
+          </div>
         )}
         <p className="mt-4">
-          <Link href="/opinar" className="btn btn-ghost">¿Ya has cobrado? Deja tu opinión</Link>
+          <Link href="/opinar" className="font-semibold text-brand underline underline-offset-4">¿Ya has cobrado? Cuéntalo aquí →</Link>
         </p>
 
-        <section aria-labelledby="faq" className="mt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id="faq" className="text-xl font-extrabold">Preguntas frecuentes</h2>
-            <Link href="/como-funciona" className="text-sm font-semibold text-brand underline-offset-2 hover:underline">Guía completa →</Link>
-          </div>
+        <section aria-labelledby="faq" className="mt-10">
+          <h2 id="faq" className="text-xl font-extrabold">Dudas rápidas</h2>
           <div className="card mt-3 divide-y divide-line">
             {faqs.map(([q, a]) => (
               <details key={q} className="group px-4 py-3">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
+                <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between gap-3 font-semibold">
                   {q}
                   <span aria-hidden className="text-xl text-brand transition-transform group-open:rotate-45">+</span>
                 </summary>
@@ -255,6 +222,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               </details>
             ))}
           </div>
+          <p className="mt-3">
+            <Link href="/como-funciona" className="text-sm font-semibold text-brand underline-offset-2 hover:underline">Guía completa →</Link>
+          </p>
         </section>
       </div>
     </>

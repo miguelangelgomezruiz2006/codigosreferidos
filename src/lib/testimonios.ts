@@ -11,10 +11,19 @@ export interface Testimonio {
   entities: string[];
 }
 
-const ENTITY_NAMES: Record<string, string> = { openbank: "Openbank", bbva: "BBVA", robinhood: "Robinhood" };
+const ENTITY_NAMES: Record<string, string> = {
+  openbank: "Openbank",
+  bbva: "BBVA",
+  robinhood: "Robinhood",
+  kraken: "Kraken",
+  myinvestor: "MyInvestor",
+  etoro: "eToro",
+};
 
+/** «Openbank», «Openbank y BBVA», «Kraken, MyInvestor y eToro». */
 export function entityNames(t: Testimonio): string {
-  return t.entities.map((e) => ENTITY_NAMES[e] ?? e).join(" y ");
+  const names = t.entities.map((e) => ENTITY_NAMES[e] ?? e);
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}` : names.join("");
 }
 
 export const TESTIMONIOS: Testimonio[] = [
@@ -32,6 +41,16 @@ export const TESTIMONIOS: Testimonio[] = [
     name: "Candela",
     text: "Hice Robinhood y Openbank, y todo correcto.",
     entities: ["robinhood", "openbank"],
+  },
+  {
+    name: "Paco",
+    text: "He usado Kraken, MyInvestor y eToro, y en los tres me ha funcionado.",
+    entities: ["kraken", "myinvestor", "etoro"],
+  },
+  {
+    name: "Juan",
+    text: "Me encanta la app de Robinhood, y de paso me he llevado 10 €.",
+    entities: ["robinhood"],
   },
 ];
 

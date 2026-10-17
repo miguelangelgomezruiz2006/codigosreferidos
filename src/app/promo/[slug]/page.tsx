@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
-import { ExpiryLabel, PromoFacts, WorkedLabel } from "@/components/PromoCard";
+import { ExpiryLabel, WorkedLabel } from "@/components/PromoCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
@@ -14,7 +14,7 @@ import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { daysLeft, fmtDate, fmtShortDate } from "@/lib/format";
 import { guideFor } from "@/lib/signup-guides";
-import { CATEGORY_LABELS, SITE_NAME } from "@/lib/site";
+import { REWARD_LABELS, SITE_NAME } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -53,24 +53,15 @@ export default async function PromoPage({ params }: Props) {
 
   return (
     <div className="wrap mt-4">
-      <nav aria-label="Migas de pan" className="text-sm text-muted">
-        <Link href="/" className="hover:text-ink">Promociones</Link>
-        <span aria-hidden> › </span>
-        <Link href={`/?cat=${entity.category}`} className="hover:text-ink">{CATEGORY_LABELS[entity.category]}</Link>
-        <span aria-hidden> › </span>
-        <span className="text-ink">{entity.name}</span>
-      </nav>
+      <Link href="/#ofertas" className="inline-flex min-h-11 items-center text-sm font-semibold text-brand hover:underline">← Todas las ofertas</Link>
 
       <div className="mt-4 grid gap-4 sm:gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
           <header className="card p-4 sm:p-5 lg:col-start-1">
             <div className="flex items-center gap-3">
               <EntityLogo name={entity.name} logoUrl={entity.logoUrl} color={entity.color} size={56} />
               <div>
-                <p className="text-sm text-muted">
-                  {CATEGORY_LABELS[entity.category]}
-                  {promo.featured && active && <span className="badge ml-2 bg-accent text-ink">★ Opción estrella</span>}
-                </p>
-                <h1 className="text-xl font-extrabold leading-tight sm:text-2xl">{promo.title}</h1>
+                <h1 className="text-xl font-extrabold leading-tight sm:text-2xl">{entity.name}</h1>
+                {promo.featured && active && <span className="badge mt-1 bg-accent text-ink">★ Opción estrella</span>}
               </div>
             </div>
             {active ? (
@@ -106,12 +97,17 @@ export default async function PromoPage({ params }: Props) {
               </>
             )}
             {active && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                <PromoFacts p={promo} />
+              <div className="mt-3 flex flex-col gap-1 text-sm">
+                {promo.requirementText && (
+                  <p>
+                    <span className="text-muted">Qué haces: </span>
+                    <strong>{promo.requirementText}</strong>
+                    {promo.rewardType !== "CASH" && <span className="text-muted"> · premio {REWARD_LABELS[promo.rewardType].toLowerCase()}</span>}
+                  </p>
+                )}
                 <WorkedLabel count={promo.workedCount} />
               </div>
             )}
-            {promo.summary && <p className="mt-4 leading-relaxed">{promo.summary}</p>}
             {promo.risk !== "NONE" && (
               <div className="mt-4">
                 <RiskNotice risk={promo.risk} />
@@ -142,49 +138,38 @@ export default async function PromoPage({ params }: Props) {
             </section>
           )}
 
-          <section className="card flex flex-col gap-3 p-5 text-sm">
-            <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-ghost w-full text-center sm:w-auto sm:self-start">
-              Ver condiciones oficiales en la web de {entity.name} ↗
-            </a>
-            {promo.lastReviewedAt && <p className="text-muted">Revisada por última vez el {fmtDate(promo.lastReviewedAt)}.</p>}
-            <p className="text-muted">
-              Las condiciones las fija {entity.name} y pueden cambiar sin aviso. Esto no es asesoramiento financiero. Los bonos de bienvenida
-              suelen tributar en la declaración de la renta.
-            </p>
-          </section>
-
-          {active && <Testimonios items={testimoniosFor(entity.slug)} title={`Opiniones sobre ${entity.name}`} narrow />}
-
-          {reviews.length > 0 && (
-            <section aria-labelledby="opiniones-usuarios">
-              <h2 id="opiniones-usuarios" className="text-xl font-extrabold">
-                Opiniones de usuarios ({reviews.length})
-              </h2>
-              <div className="mt-3">
-                <ReviewList items={reviews} narrow />
-              </div>
-            </section>
-          )}
-
-          <section id="opinar" className="card scroll-mt-20 p-4 sm:p-5" aria-labelledby="opinar-titulo">
-            <h2 id="opinar-titulo" className="text-lg font-bold">¿Has usado esta oferta? Cuéntanos cómo te fue</h2>
-            <p className="hint mt-1 mb-4">Tu opinión ayuda a otras personas. No hace falta registrarte.</p>
-            <ReviewForm promos={[{ id: promo.id, label: entity.name }]} />
-          </section>
-
           {active && (
             <section className="card p-4 sm:p-5">
               <WorkedButton promotionId={promo.id} entityName={entity.name} initialCount={promo.workedCount} />
             </section>
           )}
 
-          {active && (
-            <section className="card flex flex-col items-start gap-2 bg-accent-soft p-5">
-              <h2 className="font-bold">¿Ya eres cliente de {entity.name}?</h2>
-              <p className="text-sm">Comparte tu código de invitación. Lo mostraremos por turnos junto a los demás para que todos reciban visitas.</p>
-              <Link href={`/mi-panel?promo=${promo.slug}`} className="btn btn-primary btn-sm">Añadir mi código</Link>
-            </section>
-          )}
+          {active && <Testimonios items={testimoniosFor(entity.slug)} title={`Opiniones sobre ${entity.name}`} narrow />}
+
+          {reviews.length > 0 && <ReviewList items={reviews} narrow />}
+
+          <details id="opinar" className="card scroll-mt-20 p-4 sm:p-5">
+            <summary className="cursor-pointer font-bold">Deja tu opinión sobre {entity.name}</summary>
+            <div className="mt-4">
+              <ReviewForm promos={[{ id: promo.id, label: entity.name }]} />
+            </div>
+          </details>
+
+          <section className="flex flex-col gap-2 text-sm text-muted">
+            <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-brand underline underline-offset-4">
+              Condiciones oficiales de {entity.name} ↗
+            </a>
+            {promo.lastReviewedAt && <p>Revisada el {fmtDate(promo.lastReviewedAt)}.</p>}
+            <p>
+              Las condiciones las fija {entity.name} y pueden cambiar. No es asesoramiento financiero. Los bonos suelen tributar en la renta.
+            </p>
+            {active && (
+              <p>
+                ¿Ya eres cliente de {entity.name}?{" "}
+                <Link href={`/mi-panel?promo=${promo.slug}`} className="font-semibold text-brand underline underline-offset-4">Comparte tu código</Link>
+              </p>
+            )}
+          </section>
         </div>
       </div>
     </div>
