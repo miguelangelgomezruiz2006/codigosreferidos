@@ -115,19 +115,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <>
-      <section className="bg-brand pb-6 pt-6 text-white">
+      <section className="bg-brand pb-4 pt-4 text-white sm:pb-6 sm:pt-6">
         <div className="wrap">
-          <h1 className="max-w-2xl text-[28px] font-extrabold leading-tight sm:text-4xl">
+          <h1 className="max-w-2xl text-2xl font-extrabold leading-tight sm:text-4xl">
             Abre la cuenta con nuestro código y cobra el regalo
           </h1>
           {totals._count > 0 && (
-            <p className="mt-3 max-w-2xl text-lg text-white/90">
+            <p className="mt-2 max-w-2xl text-white/90 sm:mt-3 sm:text-lg">
               Hasta <strong className="text-accent">{total}</strong> en {totals._count} ofertas.{" "}
               {allWithoutPayroll ? "Sin nómina" : "Ofertas sin nómina"} y sin registrarte.
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            <a href="#ofertas" className="btn btn-accent">Ver ofertas ↓</a>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm sm:mt-4">
+            <a href="#ofertas" className="btn btn-accent hidden sm:inline-flex">Ver ofertas ↓</a>
             {worked > 0 && (
               <span className="font-semibold text-white">
                 ✓ {worked} {worked === 1 ? "bono cobrado" : "bonos cobrados"} y confirmados
@@ -135,8 +135,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             )}
           </div>
           {breakdown.length > 0 && (
-            <details className="mt-2 max-w-xl text-sm">
-              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-white/80 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
+            <details className="mt-1 max-w-xl text-sm">
+              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center text-white/80 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
                 ¿De dónde salen los {total}?
               </summary>
               <div className="mt-1 rounded-xl bg-white/10 p-4">
@@ -158,7 +158,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </div>
       </section>
 
-      <div id="ofertas" className="wrap mt-5 scroll-mt-16">
+      <div id="ofertas" className="wrap mt-3 scroll-mt-16 sm:mt-5">
         <nav aria-label="Filtrar ofertas" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           {chips.map((c) => (
             <Link key={c.key} href={c.href} className={`chip shrink-0 ${c.on ? "chip-on" : ""}`} aria-current={c.on ? "true" : undefined}>
@@ -175,7 +175,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             </p>
           </div>
         ) : (
-          <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-3 grid gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {promos.map((p) => (
               <li key={p.id} className="flex">
                 <PromoCard p={p} />
