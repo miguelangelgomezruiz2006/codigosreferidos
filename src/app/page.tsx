@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PromoCard } from "@/components/PromoCard";
+import { Testimonios } from "@/components/Testimonios";
+import { TESTIMONIOS } from "@/lib/testimonios";
 import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtEuros } from "@/lib/format";
@@ -207,6 +209,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             ))}
           </ul>
         )}
+
+        <Testimonios items={TESTIMONIOS} title="Ya lo han cobrado" className="mt-12" />
 
         <section aria-labelledby="faq" className="mt-12">
           <div className="flex flex-wrap items-baseline justify-between gap-2">

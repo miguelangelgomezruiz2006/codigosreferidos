@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
 import { ExpiryLabel, PromoFacts, WorkedLabel } from "@/components/PromoCard";
+import { Testimonios } from "@/components/Testimonios";
 import { WorkedButton } from "@/components/WorkedButton";
+import { testimoniosFor } from "@/lib/testimonios";
 import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
@@ -142,6 +144,8 @@ export default async function PromoPage({ params }: Props) {
               suelen tributar en la declaración de la renta.
             </p>
           </section>
+
+          {active && <Testimonios items={testimoniosFor(entity.slug)} title={`Opiniones sobre ${entity.name}`} narrow />}
 
           {active && (
             <section className="card p-4 sm:p-5">
