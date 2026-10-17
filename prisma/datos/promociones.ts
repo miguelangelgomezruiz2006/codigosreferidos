@@ -20,6 +20,7 @@ interface PromoDef {
   expiresAt: Date | null;
   status: PromoStatus;
   risk?: RiskLevel;
+  featured?: boolean;
 }
 
 const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
@@ -61,6 +62,7 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://www.openbank.es/assets/OK_ES/es-ES/documents/v1/MGM_2026.pdf",
     expiresAt: endOfDay("2026-10-29"),
     status: "ACTIVE",
+    featured: true,
   },
   {
     entity: { slug: "myinvestor", name: "MyInvestor", category: "BROKER", website: "https://myinvestor.es", color: "#2B2D42" },
@@ -106,16 +108,16 @@ const PROMOS: PromoDef[] = [
     bonusText: "10 € en cripto",
     bonusCents: 1000,
     summary:
-      "Abre tu cuenta de Robinhood Crypto con un enlace de invitación y haz un primer depósito. El regalo llega en criptomonedas, que suben y bajan de precio.",
+      "Abre tu cuenta de Robinhood Crypto con un enlace de invitación y haz un primer depósito. Recibes 10 € en criptomonedas.",
     steps: [
       "Regístrate con el enlace de invitación y verifica tu identidad",
       "Haz un primer depósito (consulta el mínimo en la app)",
       "Recibe 10 € en criptomonedas",
+      "Ten en cuenta que, si después inviertes en criptomonedas (incluido el regalo), su precio sube y baja mucho y estarás sujeto a esa volatilidad",
     ],
     termsUrl: "https://robinhood.com/eu/en/",
     expiresAt: null,
     status: "ACTIVE",
-    risk: "CRYPTO",
   },
   {
     entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F" },
@@ -148,11 +150,11 @@ const PROMOS: PromoDef[] = [
       "Verifica tu identidad con un documento del mismo país que elegiste al registrarte",
       "Deposita al menos 200 € y compra o vende al menos 200 € (confirma los importes en la app)",
       "Recibe 30 € en tu cuenta",
+      "Ten en cuenta que, si inviertes en criptomonedas, su precio sube y baja mucho y estarás sujeto a esa volatilidad",
     ],
     termsUrl: "https://www.kraken.com/legal/referrals",
     expiresAt: null,
     status: "ACTIVE",
-    risk: "CRYPTO",
   },
   {
     entity: {
@@ -165,19 +167,19 @@ const PROMOS: PromoDef[] = [
     },
     slug: "etoro-invitacion",
     title: "eToro: abre tu cuenta de inversión con invitación",
-    bonusText: "[REVISAR: bono para el invitado]",
-    bonusCents: 0,
+    bonusText: "50 € al invertir 100 $",
+    bonusCents: 5000,
     summary:
-      "Las condiciones oficiales del programa de invitación premian a quien invita; confirma en la app qué bono de bienvenida recibes tú antes de publicar esta promoción.",
+      "Abre tu cuenta de eToro con el enlace de invitación, haz tu primer depósito y tus primeras operaciones en los 90 días siguientes, y recibe 50 €.",
     steps: [
       "Regístrate con el enlace de invitación y verifica tu cuenta",
       "En los 90 días siguientes, haz un primer depósito de al menos 100 $",
       "Abre una o varias operaciones por un total mínimo de 100 $",
+      "Recibe 50 €",
     ],
     termsUrl: "https://www.etoro.com/wp-content/uploads/2025/06/eToro-EU-RAF-TCs-May-1-2026.pdf",
     expiresAt: null,
-    // En borrador hasta confirmar qué recibe el invitado.
-    status: "DRAFT",
+    status: "ACTIVE",
     risk: "INVESTMENT",
   },
 ];
@@ -208,6 +210,7 @@ export async function loadPromotions(db: PrismaClient, { onlyMissing = false } =
       expiresAt: p.expiresAt,
       status: p.status,
       risk: p.risk ?? "NONE",
+      featured: p.featured ?? false,
       lastReviewedAt: null,
     };
     if (existing) await db.promotion.update({ where: { id: existing.id }, data });

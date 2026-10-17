@@ -54,7 +54,10 @@ export default async function PromoPage({ params }: Props) {
             <div className="flex items-center gap-3">
               <EntityLogo name={entity.name} logoUrl={entity.logoUrl} color={entity.color} size={56} />
               <div>
-                <p className="text-sm text-muted">{CATEGORY_LABELS[entity.category]}</p>
+                <p className="text-sm text-muted">
+                  {CATEGORY_LABELS[entity.category]}
+                  {promo.featured && active && <span className="badge ml-2 bg-accent text-ink">★ Opción estrella</span>}
+                </p>
                 <h1 className="text-xl font-extrabold leading-tight sm:text-2xl">{promo.title}</h1>
               </div>
             </div>

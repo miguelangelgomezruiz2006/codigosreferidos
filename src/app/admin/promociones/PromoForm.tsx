@@ -15,6 +15,7 @@ interface PromoValues {
   expiresAt: Date | null;
   status: "DRAFT" | "ACTIVE" | "EXPIRED";
   risk: "NONE" | "INVESTMENT" | "CRYPTO";
+  featured: boolean;
 }
 
 const STEPS_PLACEHOLDER = [
@@ -95,9 +96,12 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
         <select id="p-r" name="risk" className="input" defaultValue={promo?.risk ?? "NONE"}>
           <option value="NONE">Ninguno (cuentas bancarias)</option>
           <option value="INVESTMENT">Inversión: puedes perder dinero</option>
-          <option value="CRYPTO">Criptomonedas: riesgo alto</option>
+          <option value="CRYPTO">Criptomonedas (aviso de la CNMV)</option>
         </select>
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="featured" defaultChecked={promo?.featured ?? false} className="size-4" /> Opción estrella (sale la primera y destacada en la portada)
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="reviewed" defaultChecked className="size-4" /> He revisado las condiciones oficiales hoy
       </label>

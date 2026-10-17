@@ -22,7 +22,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const [promos, totals] = await Promise.all([
     db.promotion.findMany({
       where,
-      orderBy: SORTS[sortKey].orderBy,
+      // La opción estrella va siempre la primera.
+      orderBy: [{ featured: "desc" }, ...SORTS[sortKey].orderBy],
       include: { entity: true, _count: { select: { codes: { where: { status: "APPROVED" } } } } },
     }),
     db.promotion.aggregate({ where: activePromoWhere(), _sum: { bonusCents: true }, _count: true }),

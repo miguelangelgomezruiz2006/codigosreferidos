@@ -104,6 +104,7 @@ export async function savePromotionAction(_prev: FormState, form: FormData): Pro
     bonusCents,
     steps,
     expiresAt,
+    featured: form.get("featured") === "on",
     ...(form.get("reviewed") ? { lastReviewedAt: new Date() } : {}),
   };
   const id = str(form, "id");

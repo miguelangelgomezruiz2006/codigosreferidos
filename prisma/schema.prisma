@@ -132,6 +132,8 @@ model Promotion {
   expiresAt      DateTime?
   status         PromoStatus    @default(DRAFT)
   risk           RiskLevel      @default(NONE)
+  // Se muestra la primera y destacada en la portada («Opción estrella»).
+  featured       Boolean        @default(false)
   lastReviewedAt DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

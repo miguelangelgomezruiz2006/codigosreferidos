@@ -29,5 +29,5 @@ export function RiskNotice({ risk }: { risk: Risk }) {
 
 export function RiskBadge({ risk }: { risk: Risk }) {
   if (risk === "NONE") return null;
-  return <span className="badge bg-danger-soft text-danger">{risk === "CRYPTO" ? "Cripto · riesgo alto" : "Inversión con riesgo"}</span>;
+  return <span className="badge bg-danger-soft text-danger">{risk === "CRYPTO" ? "Criptomonedas" : "Inversión con riesgo"}</span>;
 }
