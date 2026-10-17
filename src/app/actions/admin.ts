@@ -207,6 +207,17 @@ export async function moderateCodeAction(form: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+export async function moderateReviewAction(form: FormData) {
+  await requireAdmin();
+  const id = str(form, "id");
+  const decision = str(form, "decision");
+  if (decision === "delete") await db.review.delete({ where: { id } });
+  else if (decision === "approve") await db.review.update({ where: { id }, data: { status: "APPROVED" } });
+  else if (decision === "reject") await db.review.update({ where: { id }, data: { status: "REJECTED" } });
+  revalidatePath("/admin", "layout");
+  revalidatePath("/");
+}
+
 /* ---------- Ajustes ---------- */
 
 export async function saveSettingsAction(_prev: FormState, form: FormData): Promise<FormState> {

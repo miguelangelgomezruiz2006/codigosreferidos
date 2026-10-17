@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PromoCard } from "@/components/PromoCard";
+import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
 import { TESTIMONIOS } from "@/lib/testimonios";
 import { activePromoWhere } from "@/lib/codes";
@@ -36,7 +37,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const where: Prisma.PromotionWhereInput = {
     AND: [activePromoWhere(), category ? { entity: { category } } : {}, effortFilter ? EFFORT_WHERE[effortFilter] : {}],
   };
-  const [promos, totals, withPayroll, breakdown] = await Promise.all([
+  const [promos, totals, withPayroll, breakdown, reviews] = await Promise.all([
     db.promotion.findMany({
       where,
       // La opción estrella va siempre la primera.
@@ -49,6 +50,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       where: activePromoWhere(),
       orderBy: { bonusCents: "desc" },
       select: { id: true, bonusCents: true, rewardType: true, entity: { select: { name: true } } },
+    }),
+    db.review.findMany({
+      where: { status: "APPROVED" },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, name: true, text: true, createdAt: true, promotion: { select: { entity: { select: { name: true } } } } },
     }),
   ]);
   const allWithoutPayroll = withPayroll === 0;
@@ -211,6 +218,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         )}
 
         <Testimonios items={TESTIMONIOS} title="Ya lo han cobrado" className="mt-12" />
+
+        {reviews.length > 0 && (
+          <section aria-labelledby="opiniones-usuarios" className="mt-8">
+            <h2 id="opiniones-usuarios" className="text-xl font-extrabold">Opiniones de usuarios</h2>
+            <div className="mt-3">
+              <ReviewList items={reviews.map((r) => ({ ...r, entityName: r.promotion.entity.name }))} />
+            </div>
+          </section>
+        )}
+        <p className="mt-4">
+          <Link href="/opinar" className="btn btn-ghost">¿Ya has cobrado? Deja tu opinión</Link>
+        </p>
 
         <section aria-labelledby="faq" className="mt-12">
           <div className="flex flex-wrap items-baseline justify-between gap-2">

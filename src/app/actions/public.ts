@@ -1,5 +1,6 @@
 "use server";
 import { z } from "zod";
+import type { FormState } from "@/app/actions/account";
 import { db } from "@/lib/db";
 import { registerUse, reportCode, revealCode, type RevealedCode } from "@/lib/codes";
 import { hitRateLimit } from "@/lib/ratelimit";
@@ -69,4 +70,39 @@ export async function workedAction(promotionId: string): Promise<WorkedState> {
       count: updated.workedCount,
     };
   });
+}
+
+const reviewSchema = z.object({
+  promotionId: id,
+  name: z.string().trim().min(2, "Escribe tu nombre o apodo.").max(40, "El nombre es demasiado largo (máximo 40 caracteres)."),
+  text: z
+    .string()
+    .trim()
+    .min(10, "Cuéntanos un poco más (mínimo 10 caracteres).")
+    .max(600, "La opinión es demasiado larga (máximo 600 caracteres).")
+    .refine((t) => !/https?:\/\/|www\./i.test(t), "Sin enlaces, por favor."),
+});
+
+/** Opinión de un visitante. Queda pendiente hasta que el administrador la aprueba. */
+export async function submitReviewAction(_prev: FormState, form: FormData): Promise<FormState> {
+  // Campo trampa: los humanos no lo ven; los robots lo rellenan.
+  if (String(form.get("web") ?? "")) return { ok: "¡Gracias! Revisaremos tu opinión antes de publicarla.", nonce: Date.now() };
+  if (form.get("consent") !== "on") return { error: "Marca la casilla para confirmar que has usado la oferta y aceptas que se publique." };
+  const parsed = reviewSchema.safeParse({
+    promotionId: String(form.get("promotionId") ?? ""),
+    name: String(form.get("name") ?? ""),
+    text: String(form.get("text") ?? ""),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const ip = await ipFingerprint();
+  if (!(await hitRateLimit(`review:${ip}`, 5, 24 * 60 * 60 * 1000))) {
+    return { error: "Has enviado varias opiniones hoy. Vuelve a probar mañana." };
+  }
+  const promo = await db.promotion.findUnique({ where: { id: parsed.data.promotionId }, select: { status: true } });
+  if (!promo || promo.status === "DRAFT") return { error: "Elige la oferta que has usado." };
+
+  const created = await db.review.createMany({ data: [{ ...parsed.data, voterKey: `ip:${ip}` }], skipDuplicates: true });
+  if (created.count === 0) return { error: "Ya habías dejado una opinión sobre esta oferta. ¡Gracias!" };
+  return { ok: "¡Gracias! Revisaremos tu opinión y la publicaremos en breve.", nonce: Date.now() };
 }

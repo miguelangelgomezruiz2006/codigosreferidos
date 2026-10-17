@@ -19,15 +19,20 @@ export default async function Privacy() {
         <ul>
           <li>Si visitas la web sin cuenta: una cookie técnica anónima y una huella cifrada de tu conexión para evitar abusos. No guardamos tu IP.</li>
           <li>Si creas una cuenta: tu email y los códigos de invitación que compartes.</li>
+          <li>Si dejas una opinión: el nombre o apodo y el texto que escribes, que se publican si los aprobamos.</li>
         </ul>
         <h2>Para qué</h2>
         <ul>
           <li>Enviarte el enlace para entrar y gestionar tus códigos.</li>
           <li>Mostrar tus códigos a otros visitantes y contar cuántas veces se copian.</li>
+          <li>Publicar tu opinión, si la envías y la aprobamos. Puedes pedir que la borremos escribiendo al email de contacto.</li>
           <li>Proteger la web frente a abusos.</li>
         </ul>
         <h2>Base legal</h2>
-        <p>La ejecución del servicio que pides al crear tu cuenta y el interés legítimo en mantener la web segura.</p>
+        <p>
+          La ejecución del servicio que pides al crear tu cuenta, tu consentimiento para publicar tu opinión y el interés legítimo en mantener la web
+          segura.
+        </p>
         <h2>Cuánto tiempo</h2>
         <p>Mientras tengas cuenta. Puedes borrar tus códigos cuando quieras desde tu panel y pedir la baja escribiendo al email de contacto.</p>
         <h2>Tus derechos</h2>

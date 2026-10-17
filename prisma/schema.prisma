@@ -164,6 +164,7 @@ model Promotion {
   events         CodeEvent[]
   assignments    Assignment[]
   workedVotes    WorkedVote[]
+  reviews        Review[]
 
   @@index([status])
 }
@@ -283,4 +284,26 @@ model RateLimit {
   key     String   @id
   count   Int
   resetAt DateTime
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Opiniones que dejan los visitantes desde el formulario. Se publican solo si el administrador las aprueba.
+model Review {
+  id          String       @id @default(cuid())
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  name        String
+  text        String
+  status      ReviewStatus @default(PENDING)
+  // Huella cifrada de la conexión: una opinión por conexión y promoción.
+  voterKey    String
+  createdAt   DateTime     @default(now())
+
+  @@unique([promotionId, voterKey])
+  @@index([status, createdAt])
 }

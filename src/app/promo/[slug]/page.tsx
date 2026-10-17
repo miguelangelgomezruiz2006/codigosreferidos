@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
 import { ExpiryLabel, PromoFacts, WorkedLabel } from "@/components/PromoCard";
+import { ReviewForm } from "@/components/ReviewForm";
+import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
 import { WorkedButton } from "@/components/WorkedButton";
 import { testimoniosFor } from "@/lib/testimonios";
@@ -42,6 +44,12 @@ export default async function PromoPage({ params }: Props) {
   if (!promo) notFound();
   const active = isPromoActive(promo);
   const { entity } = promo;
+  const reviews = await db.review.findMany({
+    where: { promotionId: promo.id, status: "APPROVED" },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+    select: { id: true, name: true, text: true, createdAt: true },
+  });
 
   return (
     <div className="wrap mt-4">
@@ -146,6 +154,23 @@ export default async function PromoPage({ params }: Props) {
           </section>
 
           {active && <Testimonios items={testimoniosFor(entity.slug)} title={`Opiniones sobre ${entity.name}`} narrow />}
+
+          {reviews.length > 0 && (
+            <section aria-labelledby="opiniones-usuarios">
+              <h2 id="opiniones-usuarios" className="text-xl font-extrabold">
+                Opiniones de usuarios ({reviews.length})
+              </h2>
+              <div className="mt-3">
+                <ReviewList items={reviews} narrow />
+              </div>
+            </section>
+          )}
+
+          <section id="opinar" className="card scroll-mt-20 p-4 sm:p-5" aria-labelledby="opinar-titulo">
+            <h2 id="opinar-titulo" className="text-lg font-bold">¿Has usado esta oferta? Cuéntanos cómo te fue</h2>
+            <p className="hint mt-1 mb-4">Tu opinión ayuda a otras personas. No hace falta registrarte.</p>
+            <ReviewForm promos={[{ id: promo.id, label: entity.name }]} />
+          </section>
 
           {active && (
             <section className="card p-4 sm:p-5">
