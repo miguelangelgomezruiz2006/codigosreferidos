@@ -18,6 +18,7 @@ const ENTITY_NAMES: Record<string, string> = {
   kraken: "Kraken",
   myinvestor: "MyInvestor",
   etoro: "eToro",
+  revolut: "Revolut",
 };
 
 /** «Openbank», «Openbank y BBVA», «Kraken, MyInvestor y eToro». */
@@ -51,6 +52,16 @@ export const TESTIMONIOS: Testimonio[] = [
     name: "Juan",
     text: "Me encanta la app de Robinhood, y de paso me he llevado 10 €.",
     entities: ["robinhood"],
+  },
+  {
+    name: "Ramón",
+    text: "Revolut va muy bien. Ya he cumplido los pasos y la recompensa me llega en unos días.",
+    entities: ["revolut"],
+  },
+  {
+    name: "Luisa",
+    text: "MyInvestor y Kraken son lo que más nos gusta a los criptobros: para mí, las mejores comisiones. Y encima, el bono.",
+    entities: ["myinvestor", "kraken"],
   },
 ];
 
