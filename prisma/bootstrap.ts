@@ -1,9 +1,11 @@
 /**
  * Se ejecuta en cada publicación, después de crear o actualizar las tablas.
  * - Crea la fila de ajustes si no existe.
- * - SOLO si la base no tiene ninguna promoción (primera publicación), carga las
- *   promociones de `datos/promociones.ts` y tus códigos de `datos/mis-codigos.ts`.
- * Nunca pisa cambios hechos después desde Administración.
+ * - Crea las promociones de `datos/promociones.ts` que aún no existen (por su slug)
+ *   y les añade tus códigos de `datos/mis-codigos.ts`.
+ * Nunca modifica promociones que ya existen: lo que cambies en Administración se respeta.
+ * (Si borras desde el panel una promoción que está en `datos/promociones.ts`, volverá a
+ * crearse en la siguiente publicación: para quitarla del todo, cadúcala en vez de borrarla.)
  */
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -19,13 +21,13 @@ async function main() {
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL, max: 1 }) });
   try {
     await db.settings.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-    if ((await db.promotion.count()) > 0) {
-      console.log("La base ya tiene promociones: no se carga nada.");
+    const created = await loadPromotions(db, { onlyMissing: true });
+    if (created.size === 0) {
+      console.log("No hay promociones nuevas que cargar.");
       return;
     }
-    await loadPromotions(db);
-    await loadMyCodes(db);
-    console.log("Primera publicación: promociones y códigos cargados.");
+    await loadMyCodes(db, { onlyEntities: created });
+    console.log(`Promociones nuevas cargadas: ${[...created].join(", ")}.`);
   } finally {
     await db.$disconnect();
   }

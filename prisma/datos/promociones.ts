@@ -1,7 +1,7 @@
 /**
  * Promociones reales (recopiladas el 17/10/2026 de fuentes públicas; importes de BBVA,
  * Mintos, Robinhood y Revolut confirmados por el administrador). No borra nada: crea o actualiza una promoción por
- * entidad. Se puede repetir en local y en producción.
+ * entidad (Kraken y eToro añadidas el 17/10/2026). Se puede repetir en local y en producción.
  *
  * `lastReviewedAt` se deja vacío a propósito: la fecha de revisión la marca el
  * administrador desde el panel cuando haya comprobado las condiciones oficiales.
@@ -9,7 +9,7 @@
 import type { Category, PromoStatus, PrismaClient, RiskLevel } from "../../src/generated/prisma/client";
 
 interface PromoDef {
-  entity: { slug: string; name: string; category: Category; website: string; color: string };
+  entity: { slug: string; name: string; category: Category; website: string; color: string; linkDomains?: string[] };
   slug: string;
   title: string;
   bonusText: string;
@@ -135,11 +135,64 @@ const PROMOS: PromoDef[] = [
     expiresAt: null,
     status: "ACTIVE",
   },
+  {
+    entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9" },
+    slug: "kraken-invitacion",
+    title: "Kraken: compra criptomonedas con invitación",
+    bonusText: "30 € al depositar y operar",
+    bonusCents: 3000,
+    summary:
+      "Abre tu cuenta en Kraken con el código o el enlace de invitación, verifica tu identidad y cumple el depósito y las operaciones mínimas. Recibís 30 € los dos.",
+    steps: [
+      "Regístrate con el enlace o introduce el código de invitación al crear la cuenta",
+      "Verifica tu identidad con un documento del mismo país que elegiste al registrarte",
+      "Deposita al menos 200 € y compra o vende al menos 200 € (confirma los importes en la app)",
+      "Recibe 30 € en tu cuenta",
+    ],
+    termsUrl: "https://www.kraken.com/legal/referrals",
+    expiresAt: null,
+    status: "ACTIVE",
+    risk: "CRYPTO",
+  },
+  {
+    entity: {
+      slug: "etoro",
+      name: "eToro",
+      category: "BROKER",
+      website: "https://www.etoro.com",
+      color: "#13C636",
+      linkDomains: ["etoro.tw"],
+    },
+    slug: "etoro-invitacion",
+    title: "eToro: abre tu cuenta de inversión con invitación",
+    bonusText: "[REVISAR: bono para el invitado]",
+    bonusCents: 0,
+    summary:
+      "Las condiciones oficiales del programa de invitación premian a quien invita; confirma en la app qué bono de bienvenida recibes tú antes de publicar esta promoción.",
+    steps: [
+      "Regístrate con el enlace de invitación y verifica tu cuenta",
+      "En los 90 días siguientes, haz un primer depósito de al menos 100 $",
+      "Abre una o varias operaciones por un total mínimo de 100 $",
+    ],
+    termsUrl: "https://www.etoro.com/wp-content/uploads/2025/06/eToro-EU-RAF-TCs-May-1-2026.pdf",
+    expiresAt: null,
+    // En borrador hasta confirmar qué recibe el invitado.
+    status: "DRAFT",
+    risk: "INVESTMENT",
+  },
 ];
 
-export async function loadPromotions(db: PrismaClient) {
+/**
+ * Con `onlyMissing`, solo crea las promociones cuyo slug aún no existe y no toca las demás
+ * (lo que se use al publicar, para no pisar los cambios hechos desde Administración).
+ * Devuelve los slugs de las entidades cuyas promociones se han creado o actualizado.
+ */
+export async function loadPromotions(db: PrismaClient, { onlyMissing = false } = {}): Promise<Set<string>> {
+  const touched = new Set<string>();
   for (const p of PROMOS) {
+    if (onlyMissing && (await db.promotion.findUnique({ where: { slug: p.slug } }))) continue;
     const entity = await db.entity.upsert({ where: { slug: p.entity.slug }, update: {}, create: p.entity });
+    touched.add(entity.slug);
     const existing =
       (await db.promotion.findUnique({ where: { slug: p.slug } })) ??
       (await db.promotion.findFirst({ where: { entityId: entity.id }, orderBy: { createdAt: "asc" } }));
@@ -161,5 +214,6 @@ export async function loadPromotions(db: PrismaClient) {
     else await db.promotion.create({ data });
     console.log(`${entity.name}: ${p.status === "ACTIVE" ? "activa" : "en borrador"} · ${p.bonusText}`);
   }
+  return touched;
 }
 

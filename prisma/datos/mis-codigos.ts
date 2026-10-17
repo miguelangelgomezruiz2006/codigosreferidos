@@ -8,7 +8,7 @@
 import type { Category, PrismaClient } from "../../src/generated/prisma/client";
 
 interface MyCode {
-  entity: { slug: string; name: string; category: Category; website: string; color: string };
+  entity: { slug: string; name: string; category: Category; website: string; color: string; linkDomains?: string[] };
   code?: string;
   link?: string;
 }
@@ -40,10 +40,21 @@ const MY_CODES: MyCode[] = [
     entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5" },
     code: "14C700311035E0",
   },
+  {
+    entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9" },
+    code: "s7qwr77s",
+    link: "https://invite.kraken.com/JDNW/h3jbz8fu",
+  },
+  {
+    entity: { slug: "etoro", name: "eToro", category: "BROKER", website: "https://www.etoro.com", color: "#13C636", linkDomains: ["etoro.tw"] },
+    link: "https://etoro.tw/4dC7EwR",
+  },
 ];
 
-export async function loadMyCodes(db: PrismaClient) {
+/** Con `onlyEntities`, solo carga los códigos de esas entidades. */
+export async function loadMyCodes(db: PrismaClient, { onlyEntities }: { onlyEntities?: Set<string> } = {}) {
   for (const item of MY_CODES) {
+    if (onlyEntities && !onlyEntities.has(item.entity.slug)) continue;
     const entity = await db.entity.upsert({ where: { slug: item.entity.slug }, update: {}, create: item.entity });
 
     let promos = await db.promotion.findMany({ where: { entityId: entity.id }, orderBy: { createdAt: "asc" } });

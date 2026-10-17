@@ -44,7 +44,7 @@ npm run typecheck
 1. Sube el código a un repositorio privado de GitHub.
 2. En Vercel, importa el repositorio y conecta una base de datos Neon desde la pestaña Storage (crea `DATABASE_URL` y `DATABASE_URL_UNPOOLED`).
 3. Añade las variables `AUTH_SECRET`, `ADMIN_EMAIL`, `RESEND_API_KEY` y `EMAIL_FROM`.
-4. Publica. En cada publicación se actualizan las tablas solas y, **solo la primera vez** (base sin promociones), se cargan `prisma/datos/promociones.ts` y `prisma/datos/mis-codigos.ts`. Después, todo se gestiona desde Administración.
+4. Publica. En cada publicación se actualizan las tablas solas y se crean las promociones de `prisma/datos/promociones.ts` **que aún no existan**, con tus códigos de `prisma/datos/mis-codigos.ts`. Las que ya existen no se tocan: se gestionan desde Administración. Para añadir una promoción nueva basta con añadirla a esos dos archivos y publicar.
 
 ## Seguridad y reglas
 
