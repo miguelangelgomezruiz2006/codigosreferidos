@@ -19,6 +19,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Red de seguridad: nada puede ensanchar la página en el móvil. «clip» no rompe la cabecera fija. */
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-ink);

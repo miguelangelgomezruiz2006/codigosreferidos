@@ -127,8 +127,8 @@ export function matchesFilters(p: FilterablePromo, filters: FilterState, except?
 }
 
 export const SORT_OPTIONS = {
-  bono: "Mayor recompensa",
-  capital: "Menos dinero necesario",
+  bono: "Más recompensa",
+  capital: "Menos dinero",
 } as const;
 
 export type SortKey = keyof typeof SORT_OPTIONS;

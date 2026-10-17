@@ -116,10 +116,13 @@ export function OffersExplorer({
               autoComplete="off"
             />
           </div>
-          <label htmlFor="orden" className="sr-only">
-            Ordenar por
-          </label>
-          <select id="orden" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="input w-auto max-w-[46%] text-sm">
+          <select
+            id="orden"
+            aria-label="Ordenar por"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="input w-auto shrink-0 text-sm"
+          >
             {Object.entries(SORT_OPTIONS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -128,7 +131,7 @@ export function OffersExplorer({
           </select>
         </div>
 
-        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+        <div className="relative -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           <button type="button" onClick={() => setFilters({})} aria-pressed={!GROUPS.some((g) => filters[g])} className={`chip shrink-0 ${!GROUPS.some((g) => filters[g]) ? "chip-on" : ""}`}>
             Todas
           </button>
@@ -151,11 +154,10 @@ export function OffersExplorer({
             const group = FILTER_GROUPS[g];
             return (
               <span key={g} className="shrink-0">
-                <label htmlFor={`f-${g}`} className="sr-only">
-                  {group.label}
-                </label>
+                {/* Sin <label> oculta aquí: dentro de una fila con desplazamiento horizontal ensancharía la página en el móvil. */}
                 <select
                   id={`f-${g}`}
+                  aria-label={group.label}
                   value={filters[g] ?? ""}
                   onChange={(e) => set(g, e.target.value || undefined)}
                   className={`chip cursor-pointer pr-2 ${filters[g] ? "chip-on" : ""}`}
