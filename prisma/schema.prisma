@@ -50,6 +50,14 @@ enum RewardType {
   CASH
   CASHBACK
   CRYPTO
+  // Sin recompensa confirmada para el nuevo cliente.
+  NONE
+  // Cupón o tarjeta regalo para comprar en una tienda.
+  VOUCHER
+  // Acciones o ETF.
+  SHARES
+  // Descuento en comisiones (por ejemplo, una transferencia gratis).
+  DISCOUNT
 }
 
 enum CodeKind {

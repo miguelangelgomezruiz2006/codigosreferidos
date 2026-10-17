@@ -21,6 +21,7 @@ export interface CheckablePromo {
   effort: "NONE" | "SPEND" | "DEPOSIT" | "INVEST";
   requiredCents: number | null;
   risk: "NONE" | "INVESTMENT" | "CRYPTO";
+  rewardType?: string;
   lastReviewedAt: Date | null;
   /** Códigos aprobados disponibles (opcional). */
   approvedCodes?: number;
@@ -43,7 +44,10 @@ export function checkPromotion(p: CheckablePromo, now = new Date()): CheckIssue[
   const add = (level: CheckLevel, message: string) => issues.push({ level, message });
 
   if (!Number.isInteger(p.bonusCents) || p.bonusCents < 0) add("error", "El importe de la recompensa no es válido.");
-  else if (p.bonusCents === 0) add("aviso", "No hay recompensa confirmada para el nuevo cliente: el texto de la tarjeta debe decirlo claramente.");
+  else if (p.rewardType === "NONE") add("aviso", "No hay recompensa confirmada para el nuevo cliente: el texto de la tarjeta debe decirlo claramente.");
+  else if (p.bonusCents === 0 && p.rewardType !== "DISCOUNT") {
+    add("aviso", "No tiene importe en euros: no sumará en el total y saldrá al final al ordenar por recompensa.");
+  }
   const textAmount = firstEuroAmountCents(p.bonusText);
   if (textAmount !== null && p.bonusCents > 0 && textAmount !== p.bonusCents) {
     add("error", `El texto dice ${textAmount / 100} € pero el importe guardado es ${p.bonusCents / 100} €.`);

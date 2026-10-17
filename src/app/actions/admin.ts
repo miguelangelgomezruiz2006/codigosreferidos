@@ -75,7 +75,7 @@ const promoSchema = z.object({
   risk: z.enum(["NONE", "INVESTMENT", "CRYPTO"]),
   effort: z.enum(["NONE", "SPEND", "DEPOSIT", "INVEST"]),
   requirementText: z.string().trim().max(40, "El requisito de la tarjeta debe ser corto (máximo 40 caracteres)."),
-  rewardType: z.enum(["CASH", "CASHBACK", "CRYPTO"]),
+  rewardType: z.enum(["CASH", "CASHBACK", "CRYPTO", "NONE", "VOUCHER", "SHARES", "DISCOUNT"]),
 });
 
 export async function savePromotionAction(_prev: FormState, form: FormData): Promise<FormState> {

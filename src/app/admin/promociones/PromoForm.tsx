@@ -19,7 +19,7 @@ interface PromoValues {
   requiresPayroll: boolean;
   effort: "NONE" | "SPEND" | "DEPOSIT" | "INVEST";
   requirementText: string;
-  rewardType: "CASH" | "CASHBACK" | "CRYPTO";
+  rewardType: "CASH" | "CASHBACK" | "CRYPTO" | "NONE" | "VOUCHER" | "SHARES" | "DISCOUNT";
   requiredCents: number | null;
 }
 
@@ -131,6 +131,10 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
             <option value="CASH">En efectivo</option>
             <option value="CASHBACK">Como cashback</option>
             <option value="CRYPTO">En criptomonedas</option>
+            <option value="SHARES">En acciones o ETF</option>
+            <option value="VOUCHER">Cupón de compra</option>
+            <option value="DISCOUNT">Descuento en comisiones</option>
+            <option value="NONE">Sin recompensa para el nuevo cliente</option>
           </select>
         </div>
       </div>

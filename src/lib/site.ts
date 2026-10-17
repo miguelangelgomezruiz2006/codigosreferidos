@@ -34,6 +34,10 @@ export const REWARD_LABELS = {
   CASH: "En efectivo",
   CASHBACK: "Cashback",
   CRYPTO: "En cripto",
+  NONE: "Nada confirmado",
+  VOUCHER: "Cupón de compra",
+  SHARES: "En acciones",
+  DISCOUNT: "Sin comisiones",
 } as const;
 
 export type EffortKey = keyof typeof EFFORT_LABELS;
@@ -51,7 +55,7 @@ export const EFFORT_TAGS = {
 export interface FilterablePromo {
   effort: EffortKey;
   rewardType: RewardKey;
-  /** 0 si no hay recompensa confirmada para el nuevo cliente. */
+  /** Importe en euros de la recompensa; 0 si no tiene un valor en euros conocido. */
   bonusCents: number;
   requiredCents: number | null;
   entity: { category: CategoryKey };
@@ -95,9 +99,12 @@ export const FILTER_GROUPS = {
     label: "Recompensa",
     all: "Cualquier recompensa",
     options: {
-      efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CASH" },
-      cashback: { label: "Cashback", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CASHBACK" },
-      cripto: { label: "En cripto", test: (p: FilterablePromo) => p.bonusCents > 0 && p.rewardType === "CRYPTO" },
+      efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.rewardType === "CASH" },
+      cashback: { label: "Cashback", test: (p: FilterablePromo) => p.rewardType === "CASHBACK" },
+      cripto: { label: "En cripto", test: (p: FilterablePromo) => p.rewardType === "CRYPTO" },
+      acciones: { label: "En acciones", test: (p: FilterablePromo) => p.rewardType === "SHARES" },
+      cupon: { label: "Cupón de compra", test: (p: FilterablePromo) => p.rewardType === "VOUCHER" },
+      comisiones: { label: "Sin comisiones", test: (p: FilterablePromo) => p.rewardType === "DISCOUNT" },
     },
   },
   cat: {

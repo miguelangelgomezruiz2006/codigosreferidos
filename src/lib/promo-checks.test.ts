@@ -42,7 +42,9 @@ describe("comprobaciones de promociones", () => {
   });
 
   it("detecta ofertas sin recompensa para el invitado, importes inválidos y enlaces no https", () => {
-    expect(messages(promo({ bonusText: "Sin bono confirmado para ti", bonusCents: 0 })).some((x) => x.includes("No hay recompensa"))).toBe(true);
+    expect(messages(promo({ bonusText: "Sin bono confirmado para ti", bonusCents: 0, rewardType: "NONE" })).some((x) => x.includes("No hay recompensa"))).toBe(true);
+    expect(messages(promo({ bonusText: "Cripto de regalo", bonusCents: 0, rewardType: "CRYPTO" })).some((x) => x.includes("importe en euros"))).toBe(true);
+    expect(messages(promo({ bonusText: "Primera transferencia sin comisiones", bonusCents: 0, rewardType: "DISCOUNT" })).some((x) => x.includes("importe"))).toBe(false);
     const m = messages(promo({ bonusCents: -5, termsUrl: "http://ejemplo.com" }));
     expect(m.some((x) => x.includes("no es válido"))).toBe(true);
     expect(m.some((x) => x.includes("https"))).toBe(true);

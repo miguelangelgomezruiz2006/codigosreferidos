@@ -20,7 +20,6 @@ export interface PromoCardData {
   requirementText?: string;
   rewardType?: RewardKey;
   requiredCents?: number | null;
-  /** 0 si no hay recompensa confirmada para el nuevo cliente. */
   bonusCents?: number;
   workedCount?: number;
   termsUrl?: string;
@@ -175,10 +174,10 @@ export function PromoCard({ p }: { p: PromoCardData }) {
             <dt className="shrink-0 text-muted">{outlayLabel(p.effort)}</dt>
             <dd className="text-right font-semibold tabular-nums">{outlayText(p)}</dd>
           </div>
-          {(p.rewardType || p.bonusCents === 0) && (
+          {p.rewardType && (
             <div className="flex items-baseline justify-between gap-3">
               <dt className="shrink-0 text-muted">Recibes</dt>
-              <dd className="text-right font-semibold">{p.bonusCents === 0 ? "Nada confirmado" : REWARD_LABELS[p.rewardType!]}</dd>
+              <dd className="text-right font-semibold">{REWARD_LABELS[p.rewardType]}</dd>
             </div>
           )}
         </dl>

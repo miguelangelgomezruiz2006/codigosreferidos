@@ -49,6 +49,23 @@ const MY_CODES: MyCode[] = [
     entity: { slug: "etoro", name: "eToro", category: "BROKER", website: "https://www.etoro.com", color: "#13C636", linkDomains: ["etoro.tw"] },
     link: "https://etoro.tw/4dC7EwR",
   },
+  {
+    entity: { slug: "imagin", name: "imagin", category: "NEOBANCO", website: "https://www.imagin.com", color: "#1A1A1A", linkDomains: ["pwlnk.io"] },
+    code: "B02IM50391305",
+    link: "https://imagin.pwlnk.io/uj$&JA4Qc",
+  },
+  {
+    entity: { slug: "coinbase", name: "Coinbase", category: "INVERSION", website: "https://www.coinbase.com", color: "#0052FF" },
+    link: "https://coinbase.com/join/R9GHRP8?src=ios-link",
+  },
+  {
+    entity: { slug: "trade-republic", name: "Trade Republic", category: "BROKER", website: "https://traderepublic.com", color: "#111111", linkDomains: ["trade.re"] },
+    link: "https://refnocode.trade.re/fvt8b12f",
+  },
+  {
+    entity: { slug: "wise", name: "Wise", category: "NEOBANCO", website: "https://wise.com", color: "#163300" },
+    link: "https://wise.com/invite/irtc/miguelangelgomezruizg",
+  },
 ];
 
 /** Con `onlyEntities`, solo carga los códigos de esas entidades. */

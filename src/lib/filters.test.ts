@@ -8,7 +8,7 @@ const ofertas: P[] = [
   { name: "MyInvestor", bonusCents: 2500, effort: "DEPOSIT", rewardType: "CASH", requiredCents: 100000, entity: { category: "BROKER" } },
   { name: "Mintos", bonusCents: 5000, effort: "INVEST", rewardType: "CASH", requiredCents: 100000, entity: { category: "INVERSION" } },
   { name: "Robinhood", bonusCents: 1000, effort: "DEPOSIT", rewardType: "CRYPTO", requiredCents: 1000, entity: { category: "BROKER" } },
-  { name: "Revolut", bonusCents: 0, effort: "SPEND", rewardType: "CASH", requiredCents: null, entity: { category: "NEOBANCO" } },
+  { name: "Revolut", bonusCents: 0, effort: "SPEND", rewardType: "NONE", requiredCents: null, entity: { category: "NEOBANCO" } },
   { name: "Kraken", bonusCents: 3000, effort: "INVEST", rewardType: "CASH", requiredCents: 20000, entity: { category: "INVERSION" } },
 ];
 const names = (f: Parameters<typeof matchesFilters>[1]) => ofertas.filter((o) => matchesFilters(o, f)).map((o) => o.name);

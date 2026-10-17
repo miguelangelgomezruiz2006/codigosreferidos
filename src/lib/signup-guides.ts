@@ -19,6 +19,13 @@ export interface SignupGuide {
 }
 
 export const SIGNUP_GUIDES: Record<string, SignupGuide> = {
+  imagin: {
+    signupUrl: "https://www.imagin.com",
+    signupLabel: "Ir a imagin",
+    where: "El alta se hace desde la app de imagin.",
+    codeMoment:
+      "Si usas el enlace, el código ya va dentro. Si no, pégalo al final del alta, cuando pregunte «¿Tienes algún código promocional?»: después no se puede añadir.",
+  },
   openbank: {
     signupUrl: "https://www.openbank.es/get-app?language=OK_ES/es-ES",
     signupLabel: "Descargar la app de Openbank",
