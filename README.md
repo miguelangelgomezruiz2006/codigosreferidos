@@ -20,8 +20,8 @@ npm run db:local        # arranca una base de datos PostgreSQL local (muestra su
 cp .env.example .env    # y rellena DATABASE_URL, SHADOW_DATABASE_URL, AUTH_SECRET y ADMIN_EMAIL
 npm run db:migrate      # crea las tablas
 npm run db:seed         # carga datos de EJEMPLO (borra lo que haya; solo funciona en local)
-npm run db:promociones  # carga las promociones reales (prisma/promociones.ts)
-npm run db:mis-codigos  # carga tus códigos (prisma/mis-codigos.ts)
+npm run db:promociones  # carga las promociones reales (prisma/datos/promociones.ts)
+npm run db:mis-codigos  # carga tus códigos (prisma/datos/mis-codigos.ts)
 npm run dev             # abre http://localhost:3000
 ```
 
@@ -29,7 +29,7 @@ npm run dev             # abre http://localhost:3000
 - Sin clave de Resend, los emails no salen: el enlace para entrar aparece en http://localhost:3000/dev/buzon.
 - Si apagas el ordenador, vuelve a arrancar la base con `npm run db:start`.
 
-Tus códigos están en `prisma/mis-codigos.ts`. Para añadir o cambiar uno, edítalo ahí y repite `npm run db:mis-codigos` (también se pueden gestionar desde Administración).
+Tus códigos están en `prisma/datos/mis-codigos.ts`. Para añadir o cambiar uno, edítalo ahí y repite `npm run db:mis-codigos` (también se pueden gestionar desde Administración).
 
 ## Comprobaciones
 
@@ -41,16 +41,10 @@ npm run typecheck
 
 ## Publicar (Vercel + Neon)
 
-1. Crea una base de datos en Neon y copia su dirección.
-2. Crea el proyecto en Vercel desde el repositorio y añade las variables: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `RESEND_API_KEY`, `EMAIL_FROM` (y `AUTH_URL` con tu dominio).
-3. Crea las tablas y los ajustes en la base de producción (no carga ejemplos):
-   ```bash
-   npx prisma migrate deploy
-   npm run db:init
-   npm run db:promociones
-   npm run db:mis-codigos
-   ```
-4. Entra con tu email y crea las promociones reales desde Administración.
+1. Sube el código a un repositorio privado de GitHub.
+2. En Vercel, importa el repositorio y conecta una base de datos Neon desde la pestaña Storage (crea `DATABASE_URL` y `DATABASE_URL_UNPOOLED`).
+3. Añade las variables `AUTH_SECRET`, `ADMIN_EMAIL`, `RESEND_API_KEY` y `EMAIL_FROM`.
+4. Publica. En cada publicación se actualizan las tablas solas y, **solo la primera vez** (base sin promociones), se cargan `prisma/datos/promociones.ts` y `prisma/datos/mis-codigos.ts`. Después, todo se gestiona desde Administración.
 
 ## Seguridad y reglas
 

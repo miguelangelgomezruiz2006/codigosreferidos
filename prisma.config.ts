@@ -9,7 +9,8 @@ export default defineConfig({
   },
   datasource: {
     // Opcional para generar el cliente; obligatoria para migrar y cargar datos.
-    url: process.env.DATABASE_URL,
+    // Con Neon, las migraciones usan la conexión directa (sin el agrupador de conexiones).
+    url: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL,
     // Solo en local con `npm run db:local`: base auxiliar para preparar migraciones.
     shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL || undefined,
   },
