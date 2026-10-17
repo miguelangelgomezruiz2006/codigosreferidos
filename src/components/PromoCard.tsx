@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EntityLogo } from "@/components/EntityLogo";
 import { RiskBadge } from "@/components/RiskNotice";
 import { daysLeft, fmtShortDate } from "@/lib/format";
-import { CATEGORY_LABELS, EFFORT_LABELS, REWARD_LABELS, type EffortKey, type RewardKey } from "@/lib/site";
+import { CATEGORY_LABELS, EFFORT_LABELS, REWARD_LABELS, offerStatus, type EffortKey, type OfferStatus, type RewardKey } from "@/lib/site";
 
 export interface PromoCardData {
   slug: string;
@@ -19,6 +19,26 @@ export interface PromoCardData {
   requirementText?: string;
   rewardType?: RewardKey;
   workedCount?: number;
+  termsUrl?: string;
+  lastReviewedAt?: Date | null;
+}
+
+/** Etiqueta de estado: caducada, acaba pronto, revisada (con fecha) o pendiente de verificar. */
+export function StatusLabel({ status }: { status: OfferStatus }) {
+  switch (status.kind) {
+    case "expired":
+      return <span className="badge bg-line text-muted">Caducada</span>;
+    case "soon":
+      return (
+        <span className="badge bg-danger-soft text-danger">
+          Acaba en {status.days} {status.days === 1 ? "día" : "días"}
+        </span>
+      );
+    case "reviewed":
+      return <span className="text-muted">Revisada el {fmtShortDate(status.date)}</span>;
+    case "unverified":
+      return <span className="text-muted">Pendiente de verificar</span>;
+  }
 }
 
 function CheckIcon() {
@@ -79,52 +99,80 @@ export function PayrollBadge({ requiresPayroll }: { requiresPayroll?: boolean })
 }
 
 export function PromoCard({ p }: { p: PromoCardData }) {
-  const highlighted = p.featured && !p.expired;
-  const soon = p.expiresAt && !p.expired && daysLeft(p.expiresAt) <= 7;
+  const status = offerStatus(p);
+  const expired = status.kind === "expired";
+  const highlighted = p.featured && !expired;
+  const steps = p.steps?.length ?? 0;
   return (
-    <Link
-      href={`/promo/${p.slug}`}
-      className={`card group relative flex w-full flex-col gap-2 p-3 transition-shadow hover:shadow-md focus-visible:shadow-md sm:gap-3 sm:p-4 ${
+    <article
+      className={`card group relative flex w-full flex-col gap-2 p-3 transition-shadow focus-within:shadow-md hover:shadow-md sm:gap-3 sm:p-4 ${
         highlighted ? "mt-2 border-2 border-accent shadow-md ring-4 ring-accent/20 sm:mt-0" : ""
       }`}
     >
       {highlighted && <span className="badge absolute -top-3 left-3 bg-accent px-3 py-1 text-ink shadow-sm">★ Opción estrella</span>}
-      {/* Cabecera en una fila: logo, entidad y bono juntos para que la tarjeta ocupe poco en el móvil. */}
       <div className="flex items-center gap-3">
         <EntityLogo name={p.entity.name} logoUrl={p.entity.logoUrl} color={p.entity.color} size={44} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-sm font-semibold leading-tight text-muted">
-            <span className="truncate">{p.entity.name}</span>
-            {(soon || p.expired) && (
-              <span className="shrink-0 text-xs">
-                <ExpiryLabel expiresAt={p.expiresAt} expired={p.expired} />
-              </span>
-            )}
-          </p>
-          <p className={`text-xl font-extrabold leading-tight sm:text-2xl ${p.expired ? "text-muted line-through" : "text-brand"}`}>{p.bonusText}</p>
+          <p className="truncate text-sm font-semibold leading-tight text-muted">{p.entity.name}</p>
+          <h3 className={`text-xl font-extrabold leading-tight sm:text-2xl ${expired ? "text-muted line-through" : "text-brand"}`}>
+            {/* El enlace cubre toda la tarjeta; el de condiciones queda por encima. */}
+            <Link href={`/promo/${p.slug}`} className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none">
+              {p.bonusText}
+            </Link>
+          </h3>
         </div>
-        {!p.expired && (
-          <span aria-hidden className="text-2xl font-bold text-brand transition-transform group-hover:translate-x-0.5 sm:hidden">
+        {!expired && (
+          <span aria-hidden className="text-2xl font-bold text-brand sm:hidden">
             ›
           </span>
         )}
       </div>
-      {!p.expired && p.effort && (
+
+      {!expired && p.effort && (
         <p className="text-sm leading-snug">
           <span className="text-muted">Qué haces: </span>
           <strong>{p.requirementText || EFFORT_LABELS[p.effort]}</strong>
         </p>
       )}
-      {!p.expired && (
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <PayrollBadge requiresPayroll={p.requiresPayroll} />
-          {p.rewardType && p.rewardType !== "CASH" && <span className="badge bg-bg text-ink">{REWARD_LABELS[p.rewardType]}</span>}
-          {p.risk && p.risk !== "NONE" && <RiskBadge risk={p.risk} />}
-          {p.workedCount ? <WorkedLabel count={p.workedCount} /> : null}
-        </div>
+
+      {!expired && (
+        <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" aria-label="Resumen">
+          <li>
+            <PayrollBadge requiresPayroll={p.requiresPayroll} />
+          </li>
+          {p.rewardType && <li className="badge bg-bg text-ink">{REWARD_LABELS[p.rewardType]}</li>}
+          {steps > 0 && <li className="badge bg-bg text-ink">{steps} {steps === 1 ? "paso" : "pasos"}</li>}
+          {p.risk && p.risk !== "NONE" && (
+            <li>
+              <RiskBadge risk={p.risk} />
+            </li>
+          )}
+          {p.workedCount ? (
+            <li>
+              <WorkedLabel count={p.workedCount} />
+            </li>
+          ) : null}
+        </ul>
       )}
-      {/* En el móvil toda la tarjeta es el enlace (con la flecha); el botón solo se ve en pantallas grandes. */}
-      {!p.expired && <span className="btn btn-primary mt-auto hidden w-full group-hover:bg-brand-dark sm:flex">Ver código y pasos →</span>}
-    </Link>
+
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-1 text-xs">
+        <StatusLabel status={status} />
+        {p.termsUrl && (
+          <a
+            href={p.termsUrl}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="relative z-10 font-semibold text-brand underline underline-offset-2 hover:text-brand-dark"
+          >
+            Condiciones oficiales ↗
+          </a>
+        )}
+      </div>
+      {!expired && (
+        <span aria-hidden className="btn btn-primary hidden w-full group-hover:bg-brand-dark sm:flex">
+          Ver oferta →
+        </span>
+      )}
+    </article>
   );
 }

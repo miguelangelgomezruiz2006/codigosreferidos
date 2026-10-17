@@ -8,11 +8,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
-  const [codesToReview, reviewsToReview] = await Promise.all([
+  const [codesToReview, reviewsToReview, offerReports] = await Promise.all([
     db.referralCode.count({ where: { status: { in: ["PENDING", "HIDDEN"] }, kind: "COMMUNITY" } }),
     db.review.count({ where: { status: "PENDING" } }),
+    db.offerReport.count(),
   ]);
-  const toReview = codesToReview + reviewsToReview;
+  const toReview = codesToReview + reviewsToReview + offerReports;
   const tabs = [
     ["/admin", "Resumen"],
     ["/admin/promociones", "Promociones"],

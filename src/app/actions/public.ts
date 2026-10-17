@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { registerUse, reportCode, revealCode, type RevealedCode } from "@/lib/codes";
 import { hitRateLimit } from "@/lib/ratelimit";
 import { getSettings } from "@/lib/settings";
+import { OFFER_REPORT_KINDS } from "@/lib/site";
 import { getOrCreateVisitorId, ipFingerprint } from "@/lib/visitor";
 
 // Acciones públicas: no necesitan cuenta. Todo el recuento se decide aquí, en el servidor.
@@ -105,4 +106,24 @@ export async function submitReviewAction(_prev: FormState, form: FormData): Prom
   const created = await db.review.createMany({ data: [{ ...parsed.data, voterKey: `ip:${ip}` }], skipDuplicates: true });
   if (created.count === 0) return { error: "Ya habías dejado una opinión sobre esta oferta. ¡Gracias!" };
   return { ok: "¡Gracias! Revisaremos tu opinión y la publicaremos en breve.", nonce: Date.now() };
+}
+
+/** Aviso de que una oferta ha caducado o tiene datos incorrectos. Lo revisa el administrador. */
+export async function reportOfferAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const promotionId = String(form.get("promotionId") ?? "");
+  const kind = String(form.get("kind") ?? "");
+  const message = String(form.get("message") ?? "").trim().slice(0, 500);
+  if (!id.safeParse(promotionId).success) return { error: "Oferta no válida." };
+  if (!(kind in OFFER_REPORT_KINDS)) return { error: "Elige qué ocurre con la oferta." };
+  const ip = await ipFingerprint();
+  if (!(await hitRateLimit(`offer-report:${ip}`, 10, 24 * 60 * 60 * 1000))) {
+    return { error: "Has enviado muchos avisos hoy. Gracias, los revisaremos." };
+  }
+  const promo = await db.promotion.findUnique({ where: { id: promotionId }, select: { status: true } });
+  if (!promo || promo.status === "DRAFT") return { error: "Oferta no válida." };
+  const created = await db.offerReport.createMany({ data: [{ promotionId, kind, message, reporterKey: `ip:${ip}` }], skipDuplicates: true });
+  return {
+    ok: created.count > 0 ? "Gracias por avisar. Revisaremos la oferta lo antes posible." : "Ya nos habías avisado de esta oferta. ¡Gracias!",
+    nonce: Date.now(),
+  };
 }

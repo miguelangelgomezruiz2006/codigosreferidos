@@ -42,7 +42,10 @@ export type RewardKey = keyof typeof REWARD_LABELS;
 /** Filtros de la portada por esfuerzo y tipo de premio. */
 export const EFFORT_FILTERS = {
   "sin-invertir": "Sin invertir",
-  efectivo: "Pago en efectivo",
+  "sin-ingreso": "Sin ingreso inicial",
+  efectivo: "Premio en efectivo",
+  cripto: "Premio en cripto",
+  compras: "Con compras",
 } as const;
 
 export type EffortFilterKey = keyof typeof EFFORT_FILTERS;
@@ -50,3 +53,56 @@ export type EffortFilterKey = keyof typeof EFFORT_FILTERS;
 export function isEffortFilter(v: string | undefined): v is EffortFilterKey {
   return !!v && v in EFFORT_FILTERS;
 }
+
+/** Datos mínimos para decidir si una oferta cumple un filtro. Solo se usan datos guardados: si falta, no cumple. */
+export interface FilterablePromo {
+  effort: EffortKey;
+  rewardType: RewardKey;
+}
+
+export const EFFORT_FILTER_TEST: Record<EffortFilterKey, (p: FilterablePromo) => boolean> = {
+  "sin-invertir": (p) => p.effort !== "INVEST",
+  // Solo las que únicamente piden abrir la cuenta. Las de «usar la tarjeta» pueden necesitar saldo, así que no cuentan.
+  "sin-ingreso": (p) => p.effort === "NONE",
+  efectivo: (p) => p.rewardType === "CASH",
+  cripto: (p) => p.rewardType === "CRYPTO",
+  compras: (p) => p.effort === "SPEND",
+};
+
+export const SORT_OPTIONS = {
+  bono: "Mayor recompensa",
+  facil: "Menos pasos",
+  revisadas: "Revisadas hace menos",
+  caducan: "Acaban antes",
+} as const;
+
+export type SortKey = keyof typeof SORT_OPTIONS;
+
+export function isSortKey(v: string | undefined): v is SortKey {
+  return !!v && v in SORT_OPTIONS;
+}
+
+/** Estado visible de una oferta: caducada, acaba pronto, revisada o pendiente de verificar. */
+export type OfferStatus =
+  | { kind: "expired" }
+  | { kind: "soon"; days: number }
+  | { kind: "reviewed"; date: Date }
+  | { kind: "unverified" };
+
+export function offerStatus(p: { expiresAt: Date | null; lastReviewedAt?: Date | null; expired?: boolean }, now = new Date()): OfferStatus {
+  if (p.expired || (p.expiresAt && p.expiresAt <= now)) return { kind: "expired" };
+  if (p.expiresAt) {
+    const days = Math.ceil((p.expiresAt.getTime() - now.getTime()) / 86_400_000);
+    if (days <= 7) return { kind: "soon", days };
+  }
+  if (p.lastReviewedAt) return { kind: "reviewed", date: p.lastReviewedAt };
+  return { kind: "unverified" };
+}
+
+/** Motivos para avisar de que una oferta está mal (formulario de la ficha y Moderación). */
+export const OFFER_REPORT_KINDS = {
+  caducada: "La oferta ha terminado",
+  importe: "El importe o los requisitos han cambiado",
+  enlace: "El enlace o las condiciones no funcionan",
+  otro: "Otro problema",
+} as const;

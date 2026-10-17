@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
-import { ExpiryLabel, WorkedLabel } from "@/components/PromoCard";
+import { OfferReportForm } from "@/components/OfferReportForm";
+import { ExpiryLabel, StatusLabel, WorkedLabel } from "@/components/PromoCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
@@ -14,7 +15,7 @@ import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { daysLeft, fmtDate, fmtShortDate } from "@/lib/format";
 import { guideFor } from "@/lib/signup-guides";
-import { REWARD_LABELS, SITE_NAME } from "@/lib/site";
+import { REWARD_LABELS, SITE_NAME, offerStatus } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -33,9 +34,13 @@ async function load(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const promo = await load((await params).slug);
   if (!promo) return { title: "Promoción no encontrada" };
+  const title = `Código amigo ${promo.entity.name}: ${promo.bonusText}`;
+  const description = `${promo.title}.${promo.requirementText ? ` Qué hay que hacer: ${promo.requirementText.toLowerCase()}.` : ""} Requisitos paso a paso, condiciones oficiales y código de invitación listo para copiar.`;
   return {
-    title: `Código promocional ${promo.entity.name}: ${promo.bonusText}`,
-    description: `${promo.title}. Requisitos paso a paso y código de invitación de ${promo.entity.name} listo para copiar.`,
+    title,
+    description,
+    alternates: { canonical: `/promo/${promo.slug}` },
+    openGraph: { title, description, url: `/promo/${promo.slug}`, type: "article" },
   };
 }
 
@@ -106,8 +111,12 @@ export default async function PromoPage({ params }: Props) {
                   </p>
                 )}
                 <WorkedLabel count={promo.workedCount} />
+                <span className="text-xs">
+                  <StatusLabel status={offerStatus(promo)} />
+                </span>
               </div>
             )}
+            {promo.summary && <p className="mt-3 leading-relaxed">{promo.summary}</p>}
             {promo.risk !== "NONE" && (
               <div className="mt-4">
                 <RiskNotice risk={promo.risk} />
@@ -159,10 +168,15 @@ export default async function PromoPage({ params }: Props) {
             <a href={promo.termsUrl} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-brand underline underline-offset-4">
               Condiciones oficiales de {entity.name} ↗
             </a>
-            {promo.lastReviewedAt && <p>Revisada el {fmtDate(promo.lastReviewedAt)}.</p>}
+            <p>
+              {promo.lastReviewedAt
+                ? `Condiciones revisadas a mano el ${fmtDate(promo.lastReviewedAt)}.`
+                : "Pendiente de verificar: aún no hemos revisado estas condiciones a mano. Consulta las oficiales antes de empezar."}
+            </p>
             <p>
               Las condiciones las fija {entity.name} y pueden cambiar. No es asesoramiento financiero. Los bonos suelen tributar en la renta.
             </p>
+            <OfferReportForm promotionId={promo.id} />
             {active && (
               <p>
                 ¿Ya eres cliente de {entity.name}?{" "}

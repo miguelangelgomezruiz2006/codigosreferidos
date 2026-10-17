@@ -165,6 +165,7 @@ model Promotion {
   assignments    Assignment[]
   workedVotes    WorkedVote[]
   reviews        Review[]
+  offerReports   OfferReport[]
 
   @@index([status])
 }
@@ -306,4 +307,18 @@ model Review {
 
   @@unique([promotionId, voterKey])
   @@index([status, createdAt])
+}
+
+// Avisos de visitantes: la oferta ha caducado o tiene datos incorrectos.
+model OfferReport {
+  id          String    @id @default(cuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  kind        String
+  message     String    @default("")
+  reporterKey String
+  createdAt   DateTime  @default(now())
+
+  @@unique([promotionId, reporterKey])
+  @@index([createdAt])
 }

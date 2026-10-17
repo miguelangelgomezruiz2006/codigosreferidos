@@ -79,6 +79,29 @@ export default async function HowItWorks() {
         </p>
       </section>
 
+      <section className="prose-legal card mt-8 p-4 sm:p-5" aria-labelledby="transparencia">
+        <h2 id="transparencia" className="!mt-0">Cómo gana dinero {SITE_NAME}</h2>
+        <p>
+          Algunos códigos son del propietario de la web. Si abres una cuenta con uno de ellos, la entidad le paga a él su recompensa de invitación,
+          igual que pasa cuando te invita un amigo. A ti no te cuesta nada y no reduce tu recompensa. Por defecto, las ofertas se ordenan por
+          recompensa; la «opción estrella» la elige el propietario.
+        </p>
+        <p>
+          Cuando los códigos del propietario llegan a su límite de usos, mostramos por turnos los que comparten otros usuarios. Cada código indica
+          de quién es.
+        </p>
+        <h2>Cómo revisamos las ofertas</h2>
+        <ul>
+          <li>Los datos salen de las condiciones oficiales de cada entidad, que enlazamos en cada oferta.</li>
+          <li>La revisión es manual. Cada oferta muestra la fecha de la última comprobación o «Pendiente de verificar» si aún no la hemos revisado.</li>
+          <li>Las ofertas con fecha de fin desaparecen solas de las activas al caducar y pasan a «Caducadas».</li>
+          <li>
+            Si ves una oferta caducada o con algún dato mal, usa el enlace «Avísanos» al final de su ficha. Revisamos cada aviso.
+          </li>
+          <li>Las opiniones son de personas que han usado las ofertas. Indicamos cuáles son de amigos del propietario y revisamos el resto antes de publicarlas.</li>
+        </ul>
+      </section>
+
       <section className="prose-legal card mt-8 p-4 sm:p-5" aria-labelledby="preguntas">
         <h2 id="preguntas" className="!mt-0">Preguntas frecuentes</h2>
         <h3 className="mt-4 font-bold">¿Hay que domiciliar la nómina?</h3>

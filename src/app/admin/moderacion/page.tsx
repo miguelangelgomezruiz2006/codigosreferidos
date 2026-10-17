@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { moderateCodeAction, moderateReviewAction } from "@/app/actions/admin";
+import { deleteOfferReportAction, moderateCodeAction, moderateReviewAction } from "@/app/actions/admin";
+import { OFFER_REPORT_KINDS } from "@/lib/site";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SubmitButton } from "@/components/SubmitButton";
 import { db } from "@/lib/db";
@@ -36,6 +37,11 @@ export default async function Moderation() {
     reports: { orderBy: { createdAt: "desc" as const }, take: 5 },
   };
   const reviewInclude = { promotion: { include: { entity: true } } };
+  const offerReports = await db.offerReport.findMany({
+    include: { promotion: { include: { entity: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
   const [pendingReviews, publishedReviews] = await Promise.all([
     db.review.findMany({ where: { status: "PENDING" }, include: reviewInclude, orderBy: { createdAt: "asc" } }),
     db.review.findMany({ where: { status: "APPROVED" }, include: reviewInclude, orderBy: { createdAt: "desc" }, take: 50 }),
@@ -108,6 +114,37 @@ export default async function Moderation() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-extrabold">Moderación</h1>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-bold">Avisos de ofertas caducadas o con datos mal ({offerReports.length})</h2>
+        {offerReports.length === 0 ? (
+          <p className="hint">Nadie ha avisado de ningún problema.</p>
+        ) : (
+          <ul className="grid gap-3 md:grid-cols-2">
+            {offerReports.map((r) => (
+              <li key={r.id} className="card flex flex-col gap-2 p-4">
+                <Link href={`/admin/promociones/${r.promotionId}`} className="font-semibold hover:underline">
+                  {r.promotion.entity.name} · {r.promotion.bonusText}
+                </Link>
+                <p className="font-semibold text-danger">{OFFER_REPORT_KINDS[r.kind as keyof typeof OFFER_REPORT_KINDS] ?? r.kind}</p>
+                {r.message && <p className="leading-relaxed">«{r.message}»</p>}
+                <p className="text-xs text-muted">{fmtShortDate(r.createdAt)}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Link href={`/admin/promociones/${r.promotionId}`} className="btn btn-primary btn-sm">Revisar la oferta</Link>
+                  <form action={deleteOfferReportAction}>
+                    <input type="hidden" name="id" value={r.promotionId} />
+                    <input type="hidden" name="all" value="1" />
+                    <SubmitButton className="btn btn-ghost btn-sm">Resuelto: borrar avisos de esta oferta</SubmitButton>
+                  </form>
+                  <form action={deleteOfferReportAction}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <SubmitButton className="btn btn-ghost btn-sm">Borrar este aviso</SubmitButton>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">Opiniones pendientes ({pendingReviews.length})</h2>
         <p className="hint">

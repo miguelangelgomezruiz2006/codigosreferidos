@@ -218,6 +218,15 @@ export async function moderateReviewAction(form: FormData) {
   revalidatePath("/");
 }
 
+export async function deleteOfferReportAction(form: FormData) {
+  await requireAdmin();
+  const id = str(form, "id");
+  // «Resolver» borra todos los avisos de esa oferta; «Borrar», solo uno.
+  if (str(form, "all") === "1") await db.offerReport.deleteMany({ where: { promotionId: id } });
+  else await db.offerReport.delete({ where: { id } });
+  revalidatePath("/admin", "layout");
+}
+
 /* ---------- Ajustes ---------- */
 
 export async function saveSettingsAction(_prev: FormState, form: FormData): Promise<FormState> {

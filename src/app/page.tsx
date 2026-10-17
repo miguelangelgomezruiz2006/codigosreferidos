@@ -1,56 +1,58 @@
 import Link from "next/link";
+import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
 import { PromoCard } from "@/components/PromoCard";
 import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
-import { TESTIMONIOS } from "@/lib/testimonios";
 import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtEuros } from "@/lib/format";
-import { CATEGORY_LABELS, EFFORT_FILTERS, isCategory, isEffortFilter, type EffortFilterKey } from "@/lib/site";
-import type { Prisma } from "@/generated/prisma/client";
-
-const EFFORT_WHERE: Record<EffortFilterKey, Prisma.PromotionWhereInput> = {
-  "sin-invertir": { effort: { not: "INVEST" } },
-  efectivo: { rewardType: "CASH" },
-};
+import {
+  CATEGORY_LABELS,
+  EFFORT_FILTERS,
+  EFFORT_FILTER_TEST,
+  SORT_OPTIONS,
+  isCategory,
+  isEffortFilter,
+  isSortKey,
+  type SortKey,
+} from "@/lib/site";
+import { TESTIMONIOS } from "@/lib/testimonios";
 
 export const dynamic = "force-dynamic";
-
-const SORTS = {
-  bono: { label: "Más dinero", orderBy: [{ bonusCents: "desc" as const }, { createdAt: "desc" as const }] },
-  caducan: { label: "Acaban antes", orderBy: [{ expiresAt: { sort: "asc" as const, nulls: "last" as const } }] },
-  nuevas: { label: "Más nuevas", orderBy: [{ createdAt: "desc" as const }] },
-};
 
 const HOW_IT_WORKS = [
   ["Elige una oferta", "Mira cuánto te dan y qué tienes que hacer."],
   ["Copia el código", "Pégalo al abrir la cuenta."],
-  ["Cumple los pasos y cobra", "Te ingresan el regalo."],
+  ["Cumple los pasos y cobra", "La entidad te ingresa la recompensa."],
 ];
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ cat?: string; orden?: string; esf?: string }> }) {
-  const { cat, orden, esf } = await searchParams;
-  const effortFilter = isEffortFilter(esf) ? esf : undefined;
-  const category = isCategory(cat) ? cat : undefined;
-  const sortKey = orden && orden in SORTS ? (orden as keyof typeof SORTS) : "bono";
+const BENEFITS = [
+  ["Requisitos claros", "Qué hay que ingresar, gastar o invertir, antes de empezar."],
+  ["Condiciones oficiales", "Cada oferta enlaza a las bases de la entidad."],
+  ["Revisión manual", "Indicamos la fecha de la última comprobación."],
+];
 
-  const where: Prisma.PromotionWhereInput = {
-    AND: [activePromoWhere(), category ? { entity: { category } } : {}, effortFilter ? EFFORT_WHERE[effortFilter] : {}],
-  };
-  const [promos, totals, withPayroll, breakdown, reviews] = await Promise.all([
-    db.promotion.findMany({
-      where,
-      // La opción estrella va siempre la primera.
-      orderBy: [{ featured: "desc" }, ...SORTS[sortKey].orderBy],
-      include: { entity: true },
-    }),
-    db.promotion.aggregate({ where: activePromoWhere(), _sum: { bonusCents: true, workedCount: true }, _count: true }),
+type Search = { cat?: string; orden?: string; esf?: string; q?: string };
+
+/** Normaliza para buscar sin tildes ni mayúsculas. */
+const norm = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+
+export default async function Home({ searchParams }: { searchParams: Promise<Search> }) {
+  const params = await searchParams;
+  const category = isCategory(params.cat) ? params.cat : undefined;
+  const effortFilter = isEffortFilter(params.esf) ? params.esf : undefined;
+  const sortKey: SortKey = isSortKey(params.orden) ? params.orden : "bono";
+  const query = (params.q ?? "").slice(0, 60);
+
+  // Hay pocas ofertas: se cargan todas las activas una vez y se filtran aquí, con los datos guardados de cada una.
+  const [all, withPayroll, reviews] = await Promise.all([
+    db.promotion.findMany({ where: activePromoWhere(), include: { entity: true } }),
     db.promotion.count({ where: { ...activePromoWhere(), requiresPayroll: true } }),
-    db.promotion.findMany({
-      where: activePromoWhere(),
-      orderBy: { bonusCents: "desc" },
-      select: { id: true, bonusCents: true, rewardType: true, entity: { select: { name: true } } },
-    }),
     db.review.findMany({
       where: { status: "APPROVED" },
       orderBy: { createdAt: "desc" },
@@ -59,89 +61,123 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     }),
   ]);
   const allWithoutPayroll = withPayroll === 0;
+  const totalCents = all.reduce((sum, p) => sum + p.bonusCents, 0);
+  const worked = all.reduce((sum, p) => sum + p.workedCount, 0);
+  const breakdown = [...all].sort((a, b) => b.bonusCents - a.bonusCents);
   const nonCash = breakdown.filter((b) => b.rewardType !== "CASH").map((b) => b.entity.name);
 
-  const link = (params: { cat?: string; orden?: string; esf?: string }) => {
-    const q = new URLSearchParams();
-    const c = "cat" in params ? params.cat : category;
-    const o = "orden" in params ? params.orden : sortKey;
-    const e = "esf" in params ? params.esf : effortFilter;
-    if (c) q.set("cat", c);
-    if (e) q.set("esf", e);
-    if (o && o !== "bono") q.set("orden", o);
-    const s = q.toString();
-    return s ? `/?${s}` : "/";
+  const q = norm(query);
+  const promos = all
+    .filter((p) => !category || p.entity.category === category)
+    .filter((p) => !effortFilter || EFFORT_FILTER_TEST[effortFilter](p))
+    .filter((p) => !q || norm(p.entity.name).includes(q) || norm(p.title).includes(q))
+    .sort((a, b) => {
+      // La opción estrella va siempre la primera.
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      switch (sortKey) {
+        case "facil":
+          return a.steps.length - b.steps.length || b.bonusCents - a.bonusCents;
+        case "revisadas":
+          return (b.lastReviewedAt?.getTime() ?? 0) - (a.lastReviewedAt?.getTime() ?? 0) || b.bonusCents - a.bonusCents;
+        case "caducan":
+          return (a.expiresAt?.getTime() ?? Infinity) - (b.expiresAt?.getTime() ?? Infinity) || b.bonusCents - a.bonusCents;
+        default:
+          return b.bonusCents - a.bonusCents;
+      }
+    });
+
+  const link = (next: Search) => {
+    const s = new URLSearchParams();
+    const merged: Search = { cat: category, esf: effortFilter, orden: sortKey, q: query, ...next };
+    if (merged.cat) s.set("cat", merged.cat);
+    if (merged.esf) s.set("esf", merged.esf);
+    if (merged.q) s.set("q", merged.q);
+    if (merged.orden && merged.orden !== "bono") s.set("orden", merged.orden);
+    const str = s.toString();
+    return `/${str ? `?${str}` : ""}#ofertas`;
   };
 
-  const faqs: [string, string][] = [
-    [
-      "¿De verdad es dinero gratis?",
-      "Sí. Los bancos y las apps pagan un regalo a los clientes nuevos que llegan invitados por otro cliente. Tú abres la cuenta con el código, cumples lo que piden y te ingresan el dinero.",
-    ],
-    [
-      "¿Tengo que domiciliar la nómina?",
-      allWithoutPayroll
-        ? "No. Todas las ofertas de esta web son sin nómina."
-        : "En las marcadas con «✓ Sin nómina», no. Las que la piden lo indican en su tarjeta.",
-    ],
-    [
-      "¿Tengo que poner dinero?",
-      "En algunas sí: un ingreso, una compra con la tarjeta o una pequeña inversión. En cada oferta te decimos exactamente cuánto y en qué plazo.",
-    ],
-    ["¿Me tengo que registrar en esta web?", "No. Entras, copias el código y listo. Solo hace falta cuenta si quieres compartir tu propio código."],
-    ["¿Y si el código no funciona?", "Pulsa «Este código no funciona» y después «Dame otro código». Te daremos otro al momento."],
-    ["¿Cuándo me pagan?", "Depende de cada entidad. Normalmente unos días o semanas después de cumplir los pasos. Lo verás en las condiciones de cada oferta."],
-    ["¿Tengo que declararlo?", "Sí. Estos regalos suelen tributar en la declaración de la renta."],
-  ];
-
-  const total = fmtEuros(totals._sum.bonusCents ?? 0);
-  const worked = totals._sum.workedCount ?? 0;
+  // Solo se muestran los filtros que tienen alguna oferta: un filtro vacío solo confunde.
   const noFilter = !category && !effortFilter;
-  const chips: { key: string; label: string; href: string; on: boolean }[] = [
-    { key: "todas", label: "Todas", href: link({ cat: undefined, esf: undefined }), on: noFilter },
+  const chips = [
+    { key: "todas", label: "Todas", href: link({ cat: undefined, esf: undefined }), on: noFilter, count: all.length },
     ...Object.entries(EFFORT_FILTERS).map(([key, label]) => ({
       key,
       label,
       href: link({ cat: undefined, esf: key }),
       on: effortFilter === key,
+      count: all.filter(EFFORT_FILTER_TEST[key as keyof typeof EFFORT_FILTERS]).length,
     })),
     ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
       key,
       label,
       href: link({ cat: key, esf: undefined }),
       on: category === key,
+      count: all.filter((p) => p.entity.category === key).length,
     })),
+  ].filter((c) => c.count > 0 || c.on);
+
+  const faqs: [string, string][] = [
+    [
+      "¿Es dinero garantizado?",
+      "No. Es una recompensa que la entidad paga a los clientes nuevos que cumplen sus condiciones. Si no cumples un paso o un plazo, o ya has sido cliente, puede no pagarla.",
+    ],
+    [
+      "¿Tengo que domiciliar la nómina?",
+      allWithoutPayroll
+        ? "No. Ninguna de las ofertas actuales pide domiciliar la nómina."
+        : "En las marcadas con «✓ Sin nómina», no. Las que la piden lo indican en su tarjeta.",
+    ],
+    [
+      "¿Tengo que poner dinero?",
+      "En algunas sí: un ingreso, compras con la tarjeta o una inversión. Cada tarjeta lo indica en «Qué haces» y la ficha da los importes y plazos.",
+    ],
+    ["¿Me tengo que registrar en esta web?", "No. Entras, copias el código y listo. Solo hace falta cuenta si quieres compartir tu propio código."],
+    ["¿Y si el código no funciona?", "Pulsa «Este código no funciona» y después «Dame otro código»."],
+    ["¿Cuándo me pagan?", "Depende de cada entidad. Lo indican sus condiciones oficiales, enlazadas en cada oferta."],
+    ["¿Cómo gana dinero esta web?", "Algunos códigos son del propietario, que recibe una recompensa de la entidad si los usas. A ti no te cuesta nada ni reduce tu bono."],
+    ["¿Tengo que declararlo?", "Sí. Estas recompensas suelen tributar en la declaración de la renta."],
   ];
 
   return (
     <>
-      <section className="bg-brand pb-4 pt-4 text-white sm:pb-6 sm:pt-6">
+      <section className="bg-brand pb-5 pt-5 text-white sm:pb-8 sm:pt-8">
         <div className="wrap">
           <h1 className="max-w-2xl text-2xl font-extrabold leading-tight sm:text-4xl">
-            Abre la cuenta con nuestro código y cobra el regalo
+            Encuentra promociones y consigue recompensas con códigos de invitación
           </h1>
-          {totals._count > 0 && (
-            <p className="mt-2 max-w-2xl text-white/90 sm:mt-3 sm:text-lg">
-              Hasta <strong className="text-accent">{total}</strong> en {totals._count} ofertas.{" "}
-              {allWithoutPayroll ? "Sin nómina" : "Ofertas sin nómina"} y sin registrarte.
-            </p>
-          )}
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm sm:mt-4">
-            <a href="#ofertas" className="btn btn-accent hidden sm:inline-flex">Ver ofertas ↓</a>
-            {worked > 0 && (
-              <span className="font-semibold text-white">
-                ✓ {worked} {worked === 1 ? "bono cobrado" : "bonos cobrados"} y confirmados
-              </span>
-            )}
+          <p className="mt-2 max-w-2xl text-white/90 sm:mt-3 sm:text-lg">
+            Compara códigos de bancos y aplicaciones, conoce los requisitos y descubre cuánto necesitas ingresar antes de empezar.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <a href="#ofertas" className="btn btn-accent">Ver ofertas</a>
+            <Link href="/como-funciona" className="btn border border-white/40 text-white hover:bg-white/10">Cómo funciona</Link>
           </div>
-          {breakdown.length > 0 && (
-            <details className="mt-1 max-w-xl text-sm">
-              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center text-white/80 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
-                ¿De dónde salen los {total}?
+          <ul className="mt-6 hidden gap-4 text-sm sm:grid sm:grid-cols-3">
+            {BENEFITS.map(([t, d]) => (
+              <li key={t} className="flex gap-2">
+                <span aria-hidden className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-xs font-black text-ink">✓</span>
+                <span>
+                  <strong className="block">{t}</strong>
+                  <span className="text-white/80">{d}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {all.length > 0 && (
+            <details className="mt-3 max-w-xl text-sm sm:mt-5">
+              <summary className="inline-flex min-h-10 cursor-pointer list-none flex-wrap items-center gap-x-2 text-white/90 [&::-webkit-details-marker]:hidden">
+                <span>
+                  {fmtEuros(totalCents)} en recompensas anunciadas en {all.length} ofertas
+                  {worked > 0 ? ` · ${worked} cobradas y confirmadas` : ""}
+                </span>
+                <span className="underline underline-offset-4">¿De dónde sale?</span>
               </summary>
               <div className="mt-1 rounded-xl bg-white/10 p-4">
                 <p className="text-white/90">
-                  Es la suma de todas las ofertas activas. Cobras cada una si cumples sus pasos y, normalmente, si nunca has sido cliente.
+                  Es la suma de las recompensas anunciadas por cada entidad, no una ganancia garantizada. Cobras cada una solo si cumples sus
+                  condiciones y, normalmente, si nunca has sido cliente.
+                  {worked > 0 ? " Las «cobradas y confirmadas» son las personas que han pulsado «Me ha funcionado» en cada oferta." : ""}
                 </p>
                 <ul className="mt-3 grid gap-1">
                   {breakdown.map((b) => (
@@ -158,24 +194,56 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </div>
       </section>
 
-      <div id="ofertas" className="wrap mt-3 scroll-mt-16 sm:mt-5">
-        <nav aria-label="Filtrar ofertas" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div id="ofertas" className="wrap mt-4 scroll-mt-16 sm:mt-6">
+        <h2 className="sr-only">Ofertas</h2>
+        <form action="/" method="get" role="search" className="flex flex-wrap items-center gap-2">
+          {category && <input type="hidden" name="cat" value={category} />}
+          {effortFilter && <input type="hidden" name="esf" value={effortFilter} />}
+          <label htmlFor="buscar" className="sr-only">Buscar entidad</label>
+          <input
+            id="buscar"
+            name="q"
+            type="search"
+            defaultValue={query}
+            placeholder="Buscar entidad (Openbank, Revolut…)"
+            className="input min-w-0 flex-1 basis-56"
+          />
+          <label htmlFor="orden" className="sr-only">Ordenar por</label>
+          <AutoSubmitSelect
+            id="orden"
+            name="orden"
+            defaultValue={sortKey}
+            className="input w-auto"
+            options={Object.entries(SORT_OPTIONS).map(([value, label]) => ({ value, label }))}
+          />
+          <button type="submit" className="btn btn-ghost">Buscar</button>
+        </form>
+
+        <nav aria-label="Filtrar ofertas" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           {chips.map((c) => (
             <Link key={c.key} href={c.href} className={`chip shrink-0 ${c.on ? "chip-on" : ""}`} aria-current={c.on ? "true" : undefined}>
               {c.label}
+              <span className={`ml-1.5 text-xs ${c.on ? "text-white/80" : "text-muted"}`}>{c.count}</span>
             </Link>
           ))}
         </nav>
 
+        {query && (
+          <p className="mt-3 text-sm text-muted">
+            {promos.length} {promos.length === 1 ? "resultado" : "resultados"} para «{query}».{" "}
+            <Link href={link({ q: undefined })} className="font-semibold text-brand underline">Quitar búsqueda</Link>
+          </p>
+        )}
+
         {promos.length === 0 ? (
-          <div className="card mt-5 p-6 text-center">
-            <p className="font-semibold">No hay ofertas con este filtro.</p>
+          <div className="card mt-4 p-6 text-center">
+            <p className="font-semibold">No hay ofertas que cumplan estos filtros.</p>
             <p className="mt-2">
-              <Link href="/" className="btn btn-primary btn-sm">Ver todas</Link>
+              <Link href="/#ofertas" className="btn btn-primary btn-sm">Ver todas</Link>
             </p>
           </div>
         ) : (
-          <ul className="mt-3 grid gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {promos.map((p) => (
               <li key={p.id} className="flex">
                 <PromoCard p={p} />
@@ -183,9 +251,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             ))}
           </ul>
         )}
+        <p className="mt-3 text-xs text-muted">
+          Las cantidades son las recompensas anunciadas por cada entidad para nuevos clientes. No son ganancias garantizadas.
+        </p>
 
-        <section aria-label="Cómo funciona" className="card mt-10 p-4 sm:p-5">
-          <ol className="grid gap-4 sm:grid-cols-3">
+        <section aria-labelledby="como" className="card mt-10 p-4 sm:p-5">
+          <h2 id="como" className="text-lg font-bold">Cómo funciona</h2>
+          <ol className="mt-3 grid gap-4 sm:grid-cols-3">
             {HOW_IT_WORKS.map(([t, d], i) => (
               <li key={t} className="flex items-start gap-3">
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent font-extrabold">{i + 1}</span>
@@ -198,7 +270,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </ol>
         </section>
 
-        <Testimonios items={TESTIMONIOS} title="Ya lo han cobrado" className="mt-10" />
+        <Testimonios items={TESTIMONIOS} title="Opiniones de quienes lo han probado" className="mt-10" />
 
         {reviews.length > 0 && (
           <div className="mt-3">
@@ -210,7 +282,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </p>
 
         <section aria-labelledby="faq" className="mt-10">
-          <h2 id="faq" className="text-xl font-extrabold">Dudas rápidas</h2>
+          <h2 id="faq" className="text-xl font-extrabold">Preguntas frecuentes</h2>
           <div className="card mt-3 divide-y divide-line">
             {faqs.map(([q, a]) => (
               <details key={q} className="group px-4 py-3">
@@ -223,7 +295,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             ))}
           </div>
           <p className="mt-3">
-            <Link href="/como-funciona" className="text-sm font-semibold text-brand underline-offset-2 hover:underline">Guía completa →</Link>
+            <Link href="/como-funciona" className="text-sm font-semibold text-brand underline-offset-2 hover:underline">Guía completa y cómo revisamos las ofertas →</Link>
           </p>
         </section>
       </div>

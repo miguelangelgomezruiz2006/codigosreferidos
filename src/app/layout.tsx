@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { MobileMenu } from "@/components/MobileMenu";
 import { getCurrentUser } from "@/lib/session";
+import { getSettings } from "@/lib/settings";
 import { SITE_NAME, SITE_TAGLINE, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#0e6b5c", width: "device-width", initialScale: 1 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
+  const [user, settings] = await Promise.all([getCurrentUser(), getSettings()]);
   return (
     <html lang="es">
       <body className="flex min-h-dvh flex-col font-sans antialiased">
@@ -63,11 +64,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               que puede recibir una recompensa si los usas.
             </p>
             <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-2">
-              <Link href="/como-funciona" className="hover:text-ink">Cómo funciona</Link>
+              <Link href="/como-funciona" className="hover:text-ink">Cómo funciona y cómo ganamos dinero</Link>
               <Link href="/caducadas" className="hover:text-ink">Promociones caducadas</Link>
               <Link href="/aviso-legal" className="hover:text-ink">Aviso legal</Link>
               <Link href="/privacidad" className="hover:text-ink">Privacidad</Link>
               <Link href="/cookies" className="hover:text-ink">Cookies</Link>
+              {settings.contactEmail && (
+                <a href={`mailto:${settings.contactEmail}`} className="hover:text-ink">
+                  Contacto
+                </a>
+              )}
             </nav>
           </div>
         </footer>
