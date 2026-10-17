@@ -80,7 +80,6 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://myinvestor.es",
     expiresAt: null,
     status: "ACTIVE",
-    risk: "INVESTMENT",
   },
   {
     entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
@@ -99,7 +98,6 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://www.mintos.com/en/mintos-referral-program/",
     expiresAt: null,
     status: "ACTIVE",
-    risk: "INVESTMENT",
   },
   {
     entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
@@ -180,7 +178,6 @@ const PROMOS: PromoDef[] = [
     termsUrl: "https://www.etoro.com/wp-content/uploads/2025/06/eToro-EU-RAF-TCs-May-1-2026.pdf",
     expiresAt: null,
     status: "ACTIVE",
-    risk: "INVESTMENT",
   },
 ];
 
