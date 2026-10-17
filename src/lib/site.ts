@@ -21,3 +21,32 @@ export function siteUrl(path = ""): string {
   const base = (process.env.AUTH_URL || process.env.SITE_URL || vercel || "http://localhost:3000").replace(/\/$/, "");
   return `${base}${path}`;
 }
+
+/** Qué hay que hacer para cobrar (etiqueta corta de las tarjetas). */
+export const EFFORT_LABELS = {
+  NONE: "Solo abrir cuenta",
+  SPEND: "Usar la tarjeta",
+  DEPOSIT: "Ingresar dinero",
+  INVEST: "Invertir",
+} as const;
+
+export const REWARD_LABELS = {
+  CASH: "En efectivo",
+  CASHBACK: "Cashback",
+  CRYPTO: "En cripto",
+} as const;
+
+export type EffortKey = keyof typeof EFFORT_LABELS;
+export type RewardKey = keyof typeof REWARD_LABELS;
+
+/** Filtros de la portada por esfuerzo y tipo de premio. */
+export const EFFORT_FILTERS = {
+  "sin-invertir": "Sin invertir",
+  efectivo: "Pago en efectivo",
+} as const;
+
+export type EffortFilterKey = keyof typeof EFFORT_FILTERS;
+
+export function isEffortFilter(v: string | undefined): v is EffortFilterKey {
+  return !!v && v in EFFORT_FILTERS;
+}

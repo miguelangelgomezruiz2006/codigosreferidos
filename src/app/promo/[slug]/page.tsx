@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
-import { ExpiryLabel } from "@/components/PromoCard";
+import { ExpiryLabel, PromoFacts, WorkedLabel } from "@/components/PromoCard";
+import { WorkedButton } from "@/components/WorkedButton";
 import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
@@ -94,6 +95,12 @@ export default async function PromoPage({ params }: Props) {
                 </div>
               </>
             )}
+            {active && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                <PromoFacts p={promo} />
+                <WorkedLabel count={promo.workedCount} />
+              </div>
+            )}
             {promo.summary && <p className="mt-4 leading-relaxed">{promo.summary}</p>}
             {promo.risk !== "NONE" && (
               <div className="mt-4">
@@ -135,6 +142,12 @@ export default async function PromoPage({ params }: Props) {
               suelen tributar en la declaración de la renta.
             </p>
           </section>
+
+          {active && (
+            <section className="card p-4 sm:p-5">
+              <WorkedButton promotionId={promo.id} entityName={entity.name} initialCount={promo.workedCount} />
+            </section>
+          )}
 
           {active && (
             <section className="card flex flex-col items-start gap-2 bg-accent-soft p-5">

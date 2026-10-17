@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EntityLogo } from "@/components/EntityLogo";
 import { RiskBadge } from "@/components/RiskNotice";
 import { daysLeft, fmtShortDate } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/site";
+import { CATEGORY_LABELS, EFFORT_LABELS, REWARD_LABELS, type EffortKey, type RewardKey } from "@/lib/site";
 
 export interface PromoCardData {
   slug: string;
@@ -15,6 +15,50 @@ export interface PromoCardData {
   requiresPayroll?: boolean;
   entity: { name: string; logoUrl: string | null; color: string; category: keyof typeof CATEGORY_LABELS };
   expired?: boolean;
+  effort?: EffortKey;
+  requirementText?: string;
+  rewardType?: RewardKey;
+  workedCount?: number;
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+/** Qué hay que hacer, cuántos pasos y en qué se cobra: para comparar ofertas de un vistazo. */
+export function PromoFacts({ p, showPayroll = false }: { p: PromoCardData; showPayroll?: boolean }) {
+  const steps = p.steps?.length ?? 0;
+  const invest = p.effort === "INVEST";
+  return (
+    <ul className="contents" aria-label="Resumen de requisitos">
+      {showPayroll && (
+        <li>
+          <PayrollBadge requiresPayroll={p.requiresPayroll} />
+        </li>
+      )}
+      {p.effort && (
+        <li className={`badge ${invest ? "bg-accent-soft text-ink ring-1 ring-accent/60" : "bg-brand-soft text-brand-dark"}`}>
+          {p.requirementText || EFFORT_LABELS[p.effort]}
+        </li>
+      )}
+      {steps > 0 && <li className="badge bg-bg text-ink">{steps} {steps === 1 ? "paso" : "pasos"}</li>}
+      {p.rewardType && <li className="badge bg-bg text-ink">{REWARD_LABELS[p.rewardType]}</li>}
+    </ul>
+  );
+}
+
+export function WorkedLabel({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="inline-flex items-center gap-1 font-semibold text-brand-dark">
+      <CheckIcon />
+      {count} {count === 1 ? "persona lo ha cobrado" : "personas lo han cobrado"}
+    </span>
+  );
 }
 
 export function ExpiryLabel({ expiresAt, expired }: { expiresAt: Date | null; expired?: boolean }) {
@@ -36,7 +80,6 @@ export function PayrollBadge({ requiresPayroll }: { requiresPayroll?: boolean })
 
 export function PromoCard({ p }: { p: PromoCardData }) {
   const highlighted = p.featured && !p.expired;
-  const stepCount = p.steps?.length ?? 0;
   return (
     <Link
       href={`/promo/${p.slug}`}
@@ -59,11 +102,15 @@ export function PromoCard({ p }: { p: PromoCardData }) {
       <p className="text-sm leading-snug text-muted">{p.title}</p>
       {!p.expired && (
         <div className="flex flex-wrap gap-2">
-          <PayrollBadge requiresPayroll={p.requiresPayroll} />
-          {stepCount > 0 && <span className="badge bg-bg text-ink">{stepCount} pasos</span>}
+          <PromoFacts p={p} showPayroll />
           {p.risk && p.risk !== "NONE" && <RiskBadge risk={p.risk} />}
         </div>
       )}
+      {!p.expired && p.workedCount ? (
+        <p className="text-xs">
+          <WorkedLabel count={p.workedCount} />
+        </p>
+      ) : null}
       <div className="mt-auto pt-1 text-xs">
         <ExpiryLabel expiresAt={p.expiresAt} expired={p.expired} />
       </div>
