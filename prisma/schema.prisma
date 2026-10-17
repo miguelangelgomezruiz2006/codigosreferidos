@@ -37,6 +37,21 @@ enum RiskLevel {
   CRYPTO
 }
 
+// Qué esfuerzo pide la promoción (para las etiquetas de las tarjetas y los filtros).
+enum Effort {
+  NONE
+  SPEND
+  DEPOSIT
+  INVEST
+}
+
+// En qué se recibe el premio.
+enum RewardType {
+  CASH
+  CASHBACK
+  CRYPTO
+}
+
 enum CodeKind {
   ADMIN
   COMMUNITY
@@ -134,14 +149,31 @@ model Promotion {
   risk           RiskLevel      @default(NONE)
   // Se muestra la primera y destacada en la portada («Opción estrella»).
   featured       Boolean        @default(false)
+  effort         Effort         @default(NONE)
+  // Resumen corto del requisito principal, por ejemplo «Ingresar 70 €».
+  requirementText String        @default("")
+  rewardType     RewardType     @default(CASH)
+  // Personas distintas que han pulsado «Me ha funcionado».
+  workedCount    Int            @default(0)
   lastReviewedAt DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   codes          ReferralCode[]
   events         CodeEvent[]
   assignments    Assignment[]
+  workedVotes    WorkedVote[]
 
   @@index([status])
+}
+
+// Un «Me ha funcionado» por conexión y promoción.
+model WorkedVote {
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  voterKey    String
+  createdAt   DateTime  @default(now())
+
+  @@id([promotionId, voterKey])
 }
 
 model ReferralCode {

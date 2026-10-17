@@ -3,7 +3,13 @@ import { PromoCard } from "@/components/PromoCard";
 import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtEuros } from "@/lib/format";
-import { CATEGORY_LABELS, isCategory } from "@/lib/site";
+import { CATEGORY_LABELS, EFFORT_FILTERS, isCategory, isEffortFilter, type EffortFilterKey } from "@/lib/site";
+import type { Prisma } from "@/generated/prisma/client";
+
+const EFFORT_WHERE: Record<EffortFilterKey, Prisma.PromotionWhereInput> = {
+  "sin-invertir": { effort: { not: "INVEST" } },
+  efectivo: { rewardType: "CASH" },
+};
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +19,16 @@ const SORTS = {
   nuevas: { label: "Más nuevas", orderBy: [{ createdAt: "desc" as const }] },
 };
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ cat?: string; orden?: string }> }) {
-  const { cat, orden } = await searchParams;
+export default async function Home({ searchParams }: { searchParams: Promise<{ cat?: string; orden?: string; esf?: string }> }) {
+  const { cat, orden, esf } = await searchParams;
+  const effortFilter = isEffortFilter(esf) ? esf : undefined;
   const category = isCategory(cat) ? cat : undefined;
   const sortKey = orden && orden in SORTS ? (orden as keyof typeof SORTS) : "bono";
 
-  const where = { ...activePromoWhere(), ...(category ? { entity: { category } } : {}) };
-  const [promos, totals] = await Promise.all([
+  const where: Prisma.PromotionWhereInput = {
+    AND: [activePromoWhere(), category ? { entity: { category } } : {}, effortFilter ? EFFORT_WHERE[effortFilter] : {}],
+  };
+  const [promos, totals, breakdown] = await Promise.all([
     db.promotion.findMany({
       where,
       // La opción estrella va siempre la primera.
@@ -27,13 +36,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       include: { entity: true, _count: { select: { codes: { where: { status: "APPROVED" } } } } },
     }),
     db.promotion.aggregate({ where: activePromoWhere(), _sum: { bonusCents: true }, _count: true }),
+    db.promotion.findMany({
+      where: activePromoWhere(),
+      orderBy: { bonusCents: "desc" },
+      select: { id: true, bonusCents: true, rewardType: true, entity: { select: { name: true } } },
+    }),
   ]);
+  const nonCash = breakdown.filter((b) => b.rewardType !== "CASH").map((b) => b.entity.name);
 
-  const link = (params: { cat?: string; orden?: string }) => {
+  const link = (params: { cat?: string; orden?: string; esf?: string }) => {
     const q = new URLSearchParams();
     const c = "cat" in params ? params.cat : category;
     const o = "orden" in params ? params.orden : sortKey;
+    const e = "esf" in params ? params.esf : effortFilter;
     if (c) q.set("cat", c);
+    if (e) q.set("esf", e);
     if (o && o !== "bono") q.set("orden", o);
     const s = q.toString();
     return s ? `/?${s}` : "/";
@@ -62,6 +79,34 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               ¿Cómo funciona? Te lo explicamos en 1 minuto →
             </Link>
           </div>
+          {breakdown.length > 0 && (
+            <details className="group mt-3 max-w-xl text-sm">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-white/85 underline underline-offset-4 hover:text-white [&::-webkit-details-marker]:hidden">
+                ¿De dónde sale esta cifra?
+              </summary>
+              <div className="mt-1 rounded-xl bg-white/10 p-4">
+                <p className="text-white/90">
+                  Es la suma de los bonos anunciados de todas las promociones activas. Solo cobras cada uno si cumples sus requisitos y, normalmente, si
+                  nunca has sido cliente de esa entidad. No es un beneficio garantizado.
+                </p>
+                <ul className="mt-3 grid gap-1">
+                  {breakdown.map((b) => (
+                    <li key={b.id} className="flex justify-between gap-3 border-b border-white/10 pb-1">
+                      <span>{b.entity.name}</span>
+                      <span className="font-semibold tabular-nums">{fmtEuros(b.bonusCents)}</span>
+                    </li>
+                  ))}
+                  <li className="flex justify-between gap-3 pt-1 font-extrabold text-accent">
+                    <span>Total</span>
+                    <span className="tabular-nums">{fmtEuros(totals._sum.bonusCents ?? 0)}</span>
+                  </li>
+                </ul>
+                {nonCash.length > 0 && (
+                  <p className="mt-3 text-white/80">Incluye premios que no son en efectivo (cashback o criptomonedas): {nonCash.join(", ")}.</p>
+                )}
+              </div>
+            </details>
+          )}
         </div>
       </section>
 
@@ -92,9 +137,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </nav>
         </div>
 
+        <nav aria-label="Filtrar por esfuerzo" className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          <span className="shrink-0 text-sm text-muted">Filtrar:</span>
+          {Object.entries(EFFORT_FILTERS).map(([key, label]) => {
+            const on = effortFilter === key;
+            return (
+              <Link key={key} href={link({ esf: on ? undefined : key })} className={`chip shrink-0 ${on ? "chip-on" : ""}`} aria-current={on ? "true" : undefined}>
+                {on ? `✕ ${label}` : label}
+              </Link>
+            );
+          })}
+        </nav>
+
         {promos.length === 0 ? (
           <div className="card mt-6 p-6 text-center">
-            <p className="font-semibold">No hay promociones activas{category ? " en esta categoría" : ""} ahora mismo.</p>
+            <p className="font-semibold">No hay promociones activas{category || effortFilter ? " con estos filtros" : ""} ahora mismo.</p>
             <p className="hint mt-1">Vuelve pronto o mira las <Link href="/caducadas" className="underline">promociones caducadas</Link>.</p>
           </div>
         ) : (

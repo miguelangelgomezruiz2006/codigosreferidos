@@ -16,6 +16,9 @@ interface PromoValues {
   status: "DRAFT" | "ACTIVE" | "EXPIRED";
   risk: "NONE" | "INVESTMENT" | "CRYPTO";
   featured: boolean;
+  effort: "NONE" | "SPEND" | "DEPOSIT" | "INVEST";
+  requirementText: string;
+  rewardType: "CASH" | "CASHBACK" | "CRYPTO";
 }
 
 const STEPS_PLACEHOLDER = [
@@ -99,6 +102,37 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
           <option value="CRYPTO">Criptomonedas (aviso de la CNMV)</option>
         </select>
       </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="field">
+          <label htmlFor="p-ef">Esfuerzo principal</label>
+          <select id="p-ef" name="effort" className="input" defaultValue={promo?.effort ?? "NONE"}>
+            <option value="NONE">Solo abrir cuenta</option>
+            <option value="SPEND">Usar la tarjeta</option>
+            <option value="DEPOSIT">Ingresar dinero</option>
+            <option value="INVEST">Invertir</option>
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="p-rq">Requisito en la tarjeta</label>
+          <input
+            id="p-rq"
+            name="requirementText"
+            className="input"
+            maxLength={40}
+            defaultValue={promo?.requirementText}
+            placeholder="Ingresar 70 €"
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="p-rt">El premio se cobra</label>
+          <select id="p-rt" name="rewardType" className="input" defaultValue={promo?.rewardType ?? "CASH"}>
+            <option value="CASH">En efectivo</option>
+            <option value="CASHBACK">Como cashback</option>
+            <option value="CRYPTO">En criptomonedas</option>
+          </select>
+        </div>
+      </div>
+      <p className="hint -mt-2">Se muestran en la tarjeta y sirven para los filtros «Sin invertir» y «Pago en efectivo».</p>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="featured" defaultChecked={promo?.featured ?? false} className="size-4" /> Opción estrella (sale la primera y destacada en la portada)
       </label>

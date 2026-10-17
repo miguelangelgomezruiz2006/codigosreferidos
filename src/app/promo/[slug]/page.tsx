@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
-import { ExpiryLabel } from "@/components/PromoCard";
+import { ExpiryLabel, PromoFacts, WorkedLabel } from "@/components/PromoCard";
+import { WorkedButton } from "@/components/WorkedButton";
 import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
@@ -63,9 +64,11 @@ export default async function PromoPage({ params }: Props) {
               </div>
             </div>
             <p className={`mt-4 text-3xl font-extrabold sm:text-4xl ${active ? "text-brand" : "text-muted line-through"}`}>{promo.bonusText}</p>
-            <div className="mt-2 text-sm">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
               <ExpiryLabel expiresAt={promo.expiresAt} expired={!active} />
+              <WorkedLabel count={promo.workedCount} />
             </div>
+            <PromoFacts p={{ ...promo, codeCount: 0 }} className="mt-3" />
             {promo.summary && <p className="mt-4 leading-relaxed">{promo.summary}</p>}
             {promo.risk !== "NONE" && (
               <div className="mt-4">
@@ -105,6 +108,12 @@ export default async function PromoPage({ params }: Props) {
               suelen tributar en la declaración de la renta.
             </p>
           </section>
+
+          {active && (
+            <section className="card p-4 sm:p-5">
+              <WorkedButton promotionId={promo.id} entityName={entity.name} initialCount={promo.workedCount} />
+            </section>
+          )}
 
           {active && (
             <section className="card flex flex-col items-start gap-2 bg-accent-soft p-5">

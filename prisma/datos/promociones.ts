@@ -6,7 +6,7 @@
  * `lastReviewedAt` se deja vacío a propósito: la fecha de revisión la marca el
  * administrador desde el panel cuando haya comprobado las condiciones oficiales.
  */
-import type { Category, PromoStatus, PrismaClient, RiskLevel } from "../../src/generated/prisma/client";
+import type { Category, Effort, PromoStatus, PrismaClient, RewardType, RiskLevel } from "../../src/generated/prisma/client";
 
 interface PromoDef {
   entity: { slug: string; name: string; category: Category; website: string; color: string; linkDomains?: string[] };
@@ -21,6 +21,9 @@ interface PromoDef {
   status: PromoStatus;
   risk?: RiskLevel;
   featured?: boolean;
+  effort: Effort;
+  requirementText: string;
+  rewardType: RewardType;
 }
 
 const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
@@ -29,6 +32,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5" },
     slug: "bbva-invita-a-un-amigo",
+    effort: "SPEND",
+    requirementText: "Pagar con la tarjeta Aqua",
+    rewardType: "CASHBACK",
     title: "Cuenta Online BBVA con el plan «Invita a un amigo»",
     bonusText: "50 € de cashback con la tarjeta Aqua",
     bonusCents: 5000,
@@ -48,6 +54,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "openbank", name: "Openbank", category: "BANCO", website: "https://www.openbank.es", color: "#D9254C" },
     slug: "openbank-invita-a-tus-amigos",
+    effort: "DEPOSIT",
+    requirementText: "Ingresar 70 €",
+    rewardType: "CASH",
     title: "Cuenta Corriente Open con código de amigo",
     bonusText: "70 € al abrir cuenta",
     bonusCents: 7000,
@@ -67,6 +76,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "myinvestor", name: "MyInvestor", category: "BROKER", website: "https://myinvestor.es", color: "#2B2D42" },
     slug: "myinvestor-plan-amigo",
+    effort: "DEPOSIT",
+    requirementText: "Mantener 1.000 € o invertir 100 €",
+    rewardType: "CASH",
     title: "Plan Amigo MyInvestor: abre cuenta con código",
     bonusText: "25 € al abrir cuenta",
     bonusCents: 2500,
@@ -84,6 +96,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
     slug: "mintos-invita-a-un-amigo",
+    effort: "INVEST",
+    requirementText: "Invertir 1.000 € durante 90 días",
+    rewardType: "CASH",
     title: "Bono por invertir en Mintos con invitación",
     bonusText: "25 € al invertir 1.000 €",
     bonusCents: 2500,
@@ -102,6 +117,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
     slug: "robinhood-cripto-invitacion",
+    effort: "DEPOSIT",
+    requirementText: "Hacer un primer depósito",
+    rewardType: "CRYPTO",
     title: "Robinhood Crypto (UE): regalo en criptomonedas",
     bonusText: "10 € en cripto",
     bonusCents: 1000,
@@ -120,6 +138,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F" },
     slug: "revolut-invitacion",
+    effort: "SPEND",
+    requirementText: "Recargar y pagar con la tarjeta",
+    rewardType: "CASH",
     title: "Revolut: abre tu cuenta con invitación",
     bonusText: "70 € si cumples los requisitos",
     bonusCents: 7000,
@@ -138,6 +159,9 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9" },
     slug: "kraken-invitacion",
+    effort: "INVEST",
+    requirementText: "Depositar y operar 200 €",
+    rewardType: "CASH",
     title: "Kraken: compra criptomonedas con invitación",
     bonusText: "30 € al depositar y operar",
     bonusCents: 3000,
@@ -164,6 +188,9 @@ const PROMOS: PromoDef[] = [
       linkDomains: ["etoro.tw"],
     },
     slug: "etoro-invitacion",
+    effort: "INVEST",
+    requirementText: "Invertir 100 $",
+    rewardType: "CASH",
     title: "eToro: abre tu cuenta de inversión con invitación",
     bonusText: "50 € al invertir 100 $",
     bonusCents: 5000,
@@ -208,6 +235,9 @@ export async function loadPromotions(db: PrismaClient, { onlyMissing = false } =
       status: p.status,
       risk: p.risk ?? "NONE",
       featured: p.featured ?? false,
+      effort: p.effort,
+      requirementText: p.requirementText,
+      rewardType: p.rewardType,
       lastReviewedAt: null,
     };
     if (existing) await db.promotion.update({ where: { id: existing.id }, data });
