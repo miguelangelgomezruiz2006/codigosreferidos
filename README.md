@@ -20,12 +20,15 @@ npm run db:local        # arranca una base de datos PostgreSQL local (muestra su
 cp .env.example .env    # y rellena DATABASE_URL, SHADOW_DATABASE_URL, AUTH_SECRET y ADMIN_EMAIL
 npm run db:migrate      # crea las tablas
 npm run db:seed         # carga datos de EJEMPLO (borra lo que haya; solo funciona en local)
+npm run db:mis-codigos  # carga tus códigos (prisma/mis-codigos.ts)
 npm run dev             # abre http://localhost:3000
 ```
 
 - Para entrar como administración, usa el email de `ADMIN_EMAIL` en «Añadir mi código».
 - Sin clave de Resend, los emails no salen: el enlace para entrar aparece en http://localhost:3000/dev/buzon.
 - Si apagas el ordenador, vuelve a arrancar la base con `npm run db:start`.
+
+Tus códigos están en `prisma/mis-codigos.ts`. Para añadir o cambiar uno, edítalo ahí y repite `npm run db:mis-codigos` (también se pueden gestionar desde Administración).
 
 ## Comprobaciones
 
@@ -43,6 +46,7 @@ npm run typecheck
    ```bash
    npx prisma migrate deploy
    npm run db:init
+   npm run db:mis-codigos
    ```
 4. Entra con tu email y crea las promociones reales desde Administración.
 

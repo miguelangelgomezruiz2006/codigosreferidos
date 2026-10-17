@@ -38,7 +38,9 @@ export async function revealCode(
     const assignment = await tx.assignment.findUnique({ where: { promotionId_visitorId: { promotionId, visitorId } } });
     const current = assignment ? codes.find((c) => c.id === assignment.codeId) : undefined;
 
-    if (current && !another && isEligible(current)) {
+    // Se mantiene el mismo código salvo que sea de la comunidad y ahora haya uno del administrador disponible.
+    const adminAvailable = codes.some((c) => c.kind === "ADMIN" && isEligible(c));
+    if (current && !another && isEligible(current) && (current.kind === "ADMIN" || !adminAvailable)) {
       return { id: current.id, code: current.code, link: current.link, kind: current.kind };
     }
 
