@@ -16,6 +16,7 @@ interface PromoValues {
   status: "DRAFT" | "ACTIVE" | "EXPIRED";
   risk: "NONE" | "INVESTMENT" | "CRYPTO";
   featured: boolean;
+  requiresPayroll: boolean;
 }
 
 const STEPS_PLACEHOLDER = [
@@ -99,6 +100,9 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
           <option value="CRYPTO">Criptomonedas (aviso de la CNMV)</option>
         </select>
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="requiresPayroll" defaultChecked={promo?.requiresPayroll ?? false} className="size-4" /> Pide domiciliar la nómina (si no se marca, se muestra «Sin nómina»)
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="featured" defaultChecked={promo?.featured ?? false} className="size-4" /> Opción estrella (sale la primera y destacada en la portada)
       </label>

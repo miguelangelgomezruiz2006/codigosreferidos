@@ -81,6 +81,8 @@ export default async function HowItWorks() {
 
       <section className="prose-legal card mt-8 p-4 sm:p-5" aria-labelledby="preguntas">
         <h2 id="preguntas" className="!mt-0">Preguntas frecuentes</h2>
+        <h3 className="mt-4 font-bold">¿Hay que domiciliar la nómina?</h3>
+        <p>No. Las ofertas de {SITE_NAME} son sin nómina: no tienes que cambiar tu nómina de banco para conseguir el regalo.</p>
         <h3 className="mt-4 font-bold">¿De quién son los códigos?</h3>
         <p>
           Primero mostramos los códigos del propietario de {SITE_NAME}, que es como se mantiene la web. Cuando llegan a su límite de usos, mostramos

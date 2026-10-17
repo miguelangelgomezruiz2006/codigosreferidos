@@ -65,7 +65,7 @@ export function CodeBox({
     return (
       <div className="flex flex-col gap-3">
         <button type="button" className="btn btn-accent w-full text-base" onClick={() => reveal()} disabled={pending}>
-          {pending ? "Buscando código…" : "Ver código de invitación"}
+          {pending ? "Buscando código…" : "Ver el código"}
         </button>
         {error && <p className="note note-err" role="alert">{error}</p>}
         <p className="hint text-center">Gratis y sin registrarte.</p>

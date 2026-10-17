@@ -7,7 +7,7 @@ import { ExpiryLabel } from "@/components/PromoCard";
 import { RiskNotice } from "@/components/RiskNotice";
 import { isPromoActive } from "@/lib/codes";
 import { db } from "@/lib/db";
-import { fmtDate } from "@/lib/format";
+import { daysLeft, fmtDate, fmtShortDate } from "@/lib/format";
 import { guideFor } from "@/lib/signup-guides";
 import { CATEGORY_LABELS, SITE_NAME } from "@/lib/site";
 
@@ -18,7 +18,7 @@ type Props = { params: Promise<{ slug: string }> };
 async function load(slug: string) {
   const promo = await db.promotion.findUnique({
     where: { slug },
-    include: { entity: true, _count: { select: { codes: { where: { status: "APPROVED" } } } } },
+    include: { entity: true },
   });
   // Los borradores no existen para el público.
   if (!promo || promo.status === "DRAFT") return null;
@@ -62,10 +62,38 @@ export default async function PromoPage({ params }: Props) {
                 <h1 className="text-xl font-extrabold leading-tight sm:text-2xl">{promo.title}</h1>
               </div>
             </div>
-            <p className={`mt-4 text-3xl font-extrabold sm:text-4xl ${active ? "text-brand" : "text-muted line-through"}`}>{promo.bonusText}</p>
-            <div className="mt-2 text-sm">
-              <ExpiryLabel expiresAt={promo.expiresAt} expired={!active} />
-            </div>
+            {active ? (
+              <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-brand-soft p-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Te dan</dt>
+                  <dd className="text-xl font-extrabold leading-tight text-brand">{promo.bonusText}</dd>
+                </div>
+                <div className="rounded-lg bg-bg p-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Nómina</dt>
+                  <dd className="text-lg font-bold leading-tight">{promo.requiresPayroll ? "Hay que domiciliarla" : "✓ No hace falta"}</dd>
+                </div>
+                <div className="rounded-lg bg-bg p-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Plazo</dt>
+                  <dd className="text-lg font-bold leading-tight">
+                    {promo.expiresAt ? (
+                      <>
+                        Hasta el {fmtShortDate(promo.expiresAt)}
+                        {daysLeft(promo.expiresAt) <= 7 && <span className="block text-sm text-danger">¡Quedan {daysLeft(promo.expiresAt)} días!</span>}
+                      </>
+                    ) : (
+                      "Sin fecha límite"
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <>
+                <p className="mt-4 text-3xl font-extrabold text-muted line-through">{promo.bonusText}</p>
+                <div className="mt-2 text-sm">
+                  <ExpiryLabel expiresAt={promo.expiresAt} expired />
+                </div>
+              </>
+            )}
             {promo.summary && <p className="mt-4 leading-relaxed">{promo.summary}</p>}
             {promo.risk !== "NONE" && (
               <div className="mt-4">
@@ -83,7 +111,9 @@ export default async function PromoPage({ params }: Props) {
 
           {promo.steps.length > 0 && (
             <section className="card p-4 sm:p-5" aria-labelledby="pasos">
-              <h2 id="pasos" className="text-lg font-bold">Qué tienes que hacer</h2>
+              <h2 id="pasos" className="text-lg font-bold">
+                {active ? "Paso 2 · Haz esto para cobrar" : "Qué había que hacer"}
+              </h2>
               <ol className="mt-4 flex flex-col gap-4">
                 {promo.steps.map((step, i) => (
                   <li key={i} className="flex gap-3">
@@ -128,7 +158,8 @@ function CodePanel({
 }) {
   return (
     <div id="codigo" className="card scroll-mt-20 border-2 border-brand/30 p-4 shadow-sm sm:p-5">
-      <h2 className="mb-3 text-lg font-bold">Tu código de invitación</h2>
+      <h2 className="text-lg font-bold">{active ? "Paso 1 · Copia tu código" : "Código de invitación"}</h2>
+      {active && <p className="hint mb-3">Lo necesitarás al abrir la cuenta de {promo.entity.name} para que te den el regalo.</p>}
       {active ? (
         <CodeBox promotionId={promo.id} entityName={promo.entity.name} siteName={SITE_NAME} guide={guideFor(promo.entity)} />
       ) : (

@@ -21,6 +21,8 @@ interface PromoDef {
   status: PromoStatus;
   risk?: RiskLevel;
   featured?: boolean;
+  // Todas las actuales son sin nómina.
+  requiresPayroll?: boolean;
 }
 
 const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
@@ -208,6 +210,7 @@ export async function loadPromotions(db: PrismaClient, { onlyMissing = false } =
       status: p.status,
       risk: p.risk ?? "NONE",
       featured: p.featured ?? false,
+      requiresPayroll: p.requiresPayroll ?? false,
       lastReviewedAt: null,
     };
     if (existing) await db.promotion.update({ where: { id: existing.id }, data });

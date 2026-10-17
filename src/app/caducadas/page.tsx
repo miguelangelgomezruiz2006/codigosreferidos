@@ -26,7 +26,7 @@ export default async function Expired() {
         <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {promos.map((p) => (
             <li key={p.id} className="flex">
-              <PromoCard p={{ ...p, codeCount: 0, expired: true }} />
+              <PromoCard p={{ ...p, expired: true }} />
             </li>
           ))}
         </ul>

@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </Link>
               )}
               <Link href="/mi-panel" className="whitespace-nowrap rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25">
-                {user ? "Mis códigos" : "Añadir mi código"}
+                {user ? "Mis códigos" : "Comparte tu código"}
               </Link>
               <MobileMenu />
             </nav>
