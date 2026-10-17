@@ -1,6 +1,6 @@
 /**
- * Promociones reales (recopiladas el 17/10/2026 de fuentes públicas; PENDIENTES de
- * revisión por el administrador). No borra nada: crea o actualiza una promoción por
+ * Promociones reales (recopiladas el 17/10/2026 de fuentes públicas; importes de BBVA,
+ * Mintos, Robinhood y Revolut confirmados por el administrador). No borra nada: crea o actualiza una promoción por
  * entidad. Se puede repetir en local y en producción.
  *
  * `lastReviewedAt` se deja vacío a propósito: la fecha de revisión la marca el
@@ -33,15 +33,15 @@ const PROMOS: PromoDef[] = [
     entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5" },
     slug: "bbva-invita-a-un-amigo",
     title: "Cuenta Online BBVA con el plan «Invita a un amigo»",
-    bonusText: "Hasta 50 € al abrir cuenta",
+    bonusText: "50 € de cashback con la tarjeta Aqua",
     bonusCents: 5000,
     summary:
-      "Si nunca has sido cliente de BBVA, abre la cuenta online con un código de invitación y consigue el premio de bienvenida al usar la tarjeta. Cada código admite un número limitado de amigos.",
+      "Si nunca has sido cliente de BBVA, abre la cuenta online con un código de invitación y recupera hasta 50 € de tus compras con la tarjeta Aqua. Cada código admite un número limitado de amigos.",
     steps: [
       "Comprueba que no eres ni has sido cliente de BBVA",
       "Copia el código antes de empezar: solo se puede poner durante el alta",
-      "Abre la Cuenta Online y una tarjeta de débito desde la web o la app",
-      "Usa la tarjeta para pagar según indican las bases",
+      "Abre la Cuenta Online y pide la tarjeta Aqua desde la web o la app",
+      "Paga con la tarjeta Aqua: recibes 50 € de cashback según indican las bases",
       "Ten Bizum activado cuando BBVA pague el premio",
     ],
     termsUrl: "https://www.bbva.es/content/dam/public-web/bbvaes/documents/productos/cuentas/bases-legales-plan-invita-a-un-amigo.pdf",
@@ -87,15 +87,15 @@ const PROMOS: PromoDef[] = [
     entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
     slug: "mintos-invita-a-un-amigo",
     title: "Bono por invertir en Mintos con invitación",
-    bonusText: "1 % de lo invertido (hasta 100 €)",
-    bonusCents: 1000,
+    bonusText: "25 € al invertir 1.000 €",
+    bonusCents: 2500,
     summary:
-      "Plataforma de inversión con riesgo de pérdida. El bono es un porcentaje de lo que inviertas los primeros 90 días si llegas a 1.000 € y los mantienes.",
+      "Plataforma de inversión con riesgo de pérdida. Recibes 25 € si inviertes al menos 1.000 € y los mantienes invertidos el plazo indicado.",
     steps: [
       "Regístrate con el enlace de invitación",
       "Invierte al menos 1.000 € en los 30 días siguientes (préstamos, bonos, ETF o inmobiliario; Smart Cash no cuenta)",
       "Mantén al menos 1.000 € invertidos durante 90 días",
-      "Recibe el bono en los 7 días siguientes",
+      "Recibe los 25 € en los 7 días siguientes",
     ],
     termsUrl: "https://www.mintos.com/en/mintos-referral-program/",
     expiresAt: null,
@@ -105,15 +105,14 @@ const PROMOS: PromoDef[] = [
     entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
     slug: "robinhood-cripto-invitacion",
     title: "Robinhood Crypto (UE): regalo en criptomonedas",
-    bonusText: "50 € en cripto",
-    bonusCents: 5000,
+    bonusText: "10 € en cripto",
+    bonusCents: 1000,
     summary:
       "Abre tu cuenta de Robinhood Crypto con un enlace de invitación y haz un primer depósito. El regalo llega en criptomonedas, que suben y bajan de precio.",
     steps: [
       "Regístrate con el enlace de invitación y verifica tu identidad",
-      "Deposita al menos 50 €",
-      "Recibe el regalo en criptomonedas",
-      "Mantenlo 180 días antes de poder venderlo o retirarlo",
+      "Haz un primer depósito (consulta el mínimo en la app)",
+      "Recibe 10 € en criptomonedas",
     ],
     termsUrl: "https://robinhood.com/eu/en/",
     expiresAt: null,
@@ -123,10 +122,10 @@ const PROMOS: PromoDef[] = [
     entity: { slug: "revolut", name: "Revolut", category: "NEOBANCO", website: "https://www.revolut.com", color: "#191C1F" },
     slug: "revolut-invitacion",
     title: "Revolut: abre tu cuenta con invitación",
-    bonusText: "[REVISAR: importe para el invitado]",
-    bonusCents: 0,
+    bonusText: "70 € si cumples los requisitos",
+    bonusCents: 7000,
     summary:
-      "Las fuentes públicas no coinciden en qué recibe la persona invitada; el importe exacto aparece en la app al usar el enlace.",
+      "Abre tu cuenta de Revolut con el enlace de invitación y consigue 70 € al cumplir todos los requisitos. Las condiciones exactas aparecen en la app al registrarte.",
     steps: [
       "Regístrate con el enlace de invitación y verifica tu identidad con DNI o NIE",
       "Recarga la cuenta con una transferencia desde otro banco",
@@ -135,8 +134,7 @@ const PROMOS: PromoDef[] = [
     ],
     termsUrl: "https://www.revolut.com/es-ES/legal/referrals-terms/",
     expiresAt: null,
-    // En borrador hasta confirmar el importe: no se publica una cifra dudosa.
-    status: "DRAFT",
+    status: "ACTIVE",
   },
 ];
 
