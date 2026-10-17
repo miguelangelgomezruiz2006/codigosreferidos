@@ -154,6 +154,8 @@ model Promotion {
   effort         Effort         @default(NONE)
   // Resumen corto del requisito principal, por ejemplo «Ingresar 70 €».
   requirementText String        @default("")
+  // Dinero mínimo que hay que ingresar, gastar o invertir, en céntimos. Vacío si las condiciones no lo dicen.
+  requiredCents  Int?
   rewardType     RewardType     @default(CASH)
   // Personas distintas que han pulsado «Me ha funcionado».
   workedCount    Int            @default(0)

@@ -39,38 +39,76 @@ export const REWARD_LABELS = {
 export type EffortKey = keyof typeof EFFORT_LABELS;
 export type RewardKey = keyof typeof REWARD_LABELS;
 
-/** Filtros de la portada por esfuerzo y tipo de premio. */
-export const EFFORT_FILTERS = {
-  "sin-invertir": "Sin invertir",
-  "sin-ingreso": "Sin ingreso inicial",
-  efectivo: "Premio en efectivo",
-  cripto: "Premio en cripto",
-  compras: "Con compras",
+/** Etiqueta corta del tipo de requisito, para las tarjetas. */
+export const EFFORT_TAGS = {
+  NONE: "Solo abrir cuenta",
+  SPEND: "Con compras",
+  DEPOSIT: "Con depósito",
+  INVEST: "Con inversión",
 } as const;
 
-export type EffortFilterKey = keyof typeof EFFORT_FILTERS;
-
-export function isEffortFilter(v: string | undefined): v is EffortFilterKey {
-  return !!v && v in EFFORT_FILTERS;
-}
-
-/** Datos mínimos para decidir si una oferta cumple un filtro. Solo se usan datos guardados: si falta, no cumple. */
+/** Lo que el explorador de ofertas necesita de cada oferta para filtrar y ordenar. */
 export interface FilterablePromo {
   effort: EffortKey;
   rewardType: RewardKey;
+  entity: { category: CategoryKey };
 }
 
-export const EFFORT_FILTER_TEST: Record<EffortFilterKey, (p: FilterablePromo) => boolean> = {
-  "sin-invertir": (p) => p.effort !== "INVEST",
-  // Solo las que únicamente piden abrir la cuenta. Las de «usar la tarjeta» pueden necesitar saldo, así que no cuentan.
-  "sin-ingreso": (p) => p.effort === "NONE",
-  efectivo: (p) => p.rewardType === "CASH",
-  cripto: (p) => p.rewardType === "CRYPTO",
-  compras: (p) => p.effort === "SPEND",
-};
+/**
+ * Filtros de la portada en tres grupos combinables: dentro de un grupo se elige una opción;
+ * entre grupos se suman. Solo usan los datos guardados de cada oferta: si falta un dato, no cumple.
+ */
+export const FILTER_GROUPS = {
+  esf: {
+    label: "Qué tienes que hacer",
+    all: "Cualquier requisito",
+    options: {
+      "sin-invertir": { label: "Sin inversión", test: (p: FilterablePromo) => p.effort !== "INVEST" },
+      // Solo las que únicamente piden abrir la cuenta. «Con compras» puede necesitar saldo, así que no cuenta.
+      "sin-ingreso": { label: "Sin ingreso inicial", test: (p: FilterablePromo) => p.effort === "NONE" },
+      compras: { label: "Con compras", test: (p: FilterablePromo) => p.effort === "SPEND" },
+      deposito: { label: "Con depósito", test: (p: FilterablePromo) => p.effort === "DEPOSIT" },
+      inversion: { label: "Con inversión", test: (p: FilterablePromo) => p.effort === "INVEST" },
+    },
+  },
+  premio: {
+    label: "Premio",
+    all: "Cualquier premio",
+    options: {
+      efectivo: { label: "En efectivo", test: (p: FilterablePromo) => p.rewardType === "CASH" },
+      cashback: { label: "Cashback", test: (p: FilterablePromo) => p.rewardType === "CASHBACK" },
+      cripto: { label: "En cripto", test: (p: FilterablePromo) => p.rewardType === "CRYPTO" },
+    },
+  },
+  cat: {
+    label: "Tipo de entidad",
+    all: "Todas las entidades",
+    options: Object.fromEntries(
+      Object.entries(CATEGORY_LABELS).map(([key, label]) => [key, { label, test: (p: FilterablePromo) => p.entity.category === key }]),
+    ) as Record<CategoryKey, { label: string; test: (p: FilterablePromo) => boolean }>,
+  },
+} as const;
+
+export type FilterGroupKey = keyof typeof FILTER_GROUPS;
+export type FilterState = Partial<Record<FilterGroupKey, string>>;
+
+export function isFilterValue(group: FilterGroupKey, v: string | undefined): v is string {
+  return !!v && v in FILTER_GROUPS[group].options;
+}
+
+/** ¿Cumple la oferta todos los filtros activos? Se puede excluir un grupo para calcular cuántas quedarían al cambiarlo. */
+export function matchesFilters(p: FilterablePromo, filters: FilterState, except?: FilterGroupKey): boolean {
+  return (Object.keys(FILTER_GROUPS) as FilterGroupKey[]).every((g) => {
+    const v = filters[g];
+    if (g === except || !v) return true;
+    const option = (FILTER_GROUPS[g].options as Record<string, { test: (p: FilterablePromo) => boolean }>)[v];
+    return option ? option.test(p) : true;
+  });
+}
 
 export const SORT_OPTIONS = {
   bono: "Mayor recompensa",
+  desembolso: "Menor desembolso",
   facil: "Menos pasos",
   revisadas: "Revisadas hace menos",
   caducan: "Acaban antes",

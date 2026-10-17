@@ -20,6 +20,7 @@ interface PromoValues {
   effort: "NONE" | "SPEND" | "DEPOSIT" | "INVEST";
   requirementText: string;
   rewardType: "CASH" | "CASHBACK" | "CRYPTO";
+  requiredCents: number | null;
 }
 
 const STEPS_PLACEHOLDER = [
@@ -132,6 +133,17 @@ export function PromoForm({ entities, promo }: { entities: { id: string; name: s
             <option value="CRYPTO">En criptomonedas</option>
           </select>
         </div>
+      </div>
+      <div className="field sm:max-w-xs">
+        <label htmlFor="p-rc">Desembolso mínimo en € (opcional)</label>
+        <input
+          id="p-rc"
+          name="requiredEuros"
+          className="input"
+          inputMode="decimal"
+          defaultValue={promo?.requiredCents != null ? String(promo.requiredCents / 100).replace(".", ",") : ""}
+          placeholder="Vacío si no lo dicen las condiciones"
+        />
       </div>
       <p className="hint -mt-2">Se muestran en la tarjeta y sirven para los filtros «Sin invertir» y «Pago en efectivo».</p>
       <label className="flex items-center gap-2 text-sm">

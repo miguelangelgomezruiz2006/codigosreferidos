@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque } from "next/font/google";
 import Link from "next/link";
 import { MobileMenu } from "@/components/MobileMenu";
 import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME, SITE_TAGLINE, siteUrl } from "@/lib/site";
 import "./globals.css";
+
+// Tipografía propia para titulares e importes; el texto corrido usa la del sistema (rápida y legible).
+const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
 
 const DESCRIPTION =
   "Promociones de bienvenida de bancos, brokers y fintechs en España, con los requisitos explicados paso a paso y códigos de invitación que funcionan.";
@@ -23,7 +27,7 @@ export const viewport: Viewport = { themeColor: "#0e6b5c", width: "device-width"
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [user, settings] = await Promise.all([getCurrentUser(), getSettings()]);
   return (
-    <html lang="es">
+    <html lang="es" className={display.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
           Saltar al contenido

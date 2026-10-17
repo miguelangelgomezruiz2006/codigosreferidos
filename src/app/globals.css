@@ -24,6 +24,17 @@ body {
   color: var(--color-ink);
 }
 
+/* Titulares con la tipografía de la marca (en la capa base, para que las utilidades puedan cambiarlos). */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+}
+
 :focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
@@ -37,7 +48,11 @@ body {
     @apply rounded-xl border border-line bg-white;
   }
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[15px] font-semibold transition-[color,background-color,border-color,transform] duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .font-display {
+    font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.015em;
   }
   .btn-primary {
     @apply bg-brand text-white hover:bg-brand-dark;
@@ -52,7 +67,7 @@ body {
     @apply border border-danger/30 bg-white text-danger hover:bg-danger-soft;
   }
   .btn-sm {
-    @apply min-h-9 px-3 py-1 text-sm;
+    @apply min-h-10 px-3 py-1 text-sm;
   }
   .field {
     @apply flex flex-col gap-1;
@@ -61,7 +76,7 @@ body {
     @apply text-sm font-semibold;
   }
   .input {
-    @apply min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-base text-ink placeholder:text-muted/70;
+    @apply min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-base text-ink transition-colors placeholder:text-muted/70 hover:border-muted/50 focus:border-brand;
   }
   .hint {
     @apply text-sm text-muted;
@@ -79,7 +94,7 @@ body {
     @apply border-danger/30 bg-danger-soft text-danger;
   }
   .chip {
-    @apply inline-flex min-h-9 items-center rounded-full border border-line bg-white px-3 text-sm font-medium text-ink hover:border-brand;
+    @apply inline-flex min-h-10 items-center rounded-full border border-line bg-white px-3 text-sm font-medium text-ink hover:border-brand;
   }
   .chip-on {
     @apply border-brand bg-brand text-white hover:border-brand;

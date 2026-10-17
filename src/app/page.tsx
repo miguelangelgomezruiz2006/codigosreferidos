@@ -1,21 +1,12 @@
 import Link from "next/link";
-import { AutoSubmitSelect } from "@/components/AutoSubmitSelect";
-import { PromoCard } from "@/components/PromoCard";
+import { IconCheck } from "@/components/Icons";
+import { OffersExplorer, type OfferItem } from "@/components/OffersExplorer";
 import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
 import { activePromoWhere } from "@/lib/codes";
 import { db } from "@/lib/db";
 import { fmtEuros } from "@/lib/format";
-import {
-  CATEGORY_LABELS,
-  EFFORT_FILTERS,
-  EFFORT_FILTER_TEST,
-  SORT_OPTIONS,
-  isCategory,
-  isEffortFilter,
-  isSortKey,
-  type SortKey,
-} from "@/lib/site";
+import { FILTER_GROUPS, isFilterValue, isSortKey, type FilterGroupKey, type FilterState, type SortKey } from "@/lib/site";
 import { TESTIMONIOS } from "@/lib/testimonios";
 
 export const dynamic = "force-dynamic";
@@ -32,26 +23,47 @@ const BENEFITS = [
   ["Revisión manual", "Indicamos la fecha de la última comprobación."],
 ];
 
-type Search = { cat?: string; orden?: string; esf?: string; q?: string };
-
-/** Normaliza para buscar sin tildes ni mayúsculas. */
-const norm = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+type Search = { cat?: string; orden?: string; esf?: string; premio?: string; q?: string };
 
 export default async function Home({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;
-  const category = isCategory(params.cat) ? params.cat : undefined;
-  const effortFilter = isEffortFilter(params.esf) ? params.esf : undefined;
-  const sortKey: SortKey = isSortKey(params.orden) ? params.orden : "bono";
+  // Enlaces antiguos: «esf=efectivo» y «esf=cripto» eran filtros de premio.
+  const legacyPremio = params.esf === "efectivo" || params.esf === "cripto" ? params.esf : undefined;
+  const raw: Record<FilterGroupKey, string | undefined> = { esf: params.esf, premio: params.premio ?? legacyPremio, cat: params.cat };
+  const filters: FilterState = {};
+  for (const g of Object.keys(FILTER_GROUPS) as FilterGroupKey[]) {
+    const v = raw[g];
+    if (isFilterValue(g, v)) filters[g] = v;
+  }
+  const sort: SortKey = isSortKey(params.orden) ? params.orden : "bono";
   const query = (params.q ?? "").slice(0, 60);
 
-  // Hay pocas ofertas: se cargan todas las activas una vez y se filtran aquí, con los datos guardados de cada una.
+  // Hay pocas ofertas: se cargan todas las activas y el explorador filtra al instante en el navegador.
   const [all, withPayroll, reviews] = await Promise.all([
-    db.promotion.findMany({ where: activePromoWhere(), include: { entity: true } }),
+    db.promotion.findMany({
+      where: activePromoWhere(),
+      orderBy: [{ featured: "desc" }, { bonusCents: "desc" }],
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        bonusText: true,
+        bonusCents: true,
+        expiresAt: true,
+        steps: true,
+        risk: true,
+        featured: true,
+        requiresPayroll: true,
+        effort: true,
+        requirementText: true,
+        rewardType: true,
+        requiredCents: true,
+        workedCount: true,
+        termsUrl: true,
+        lastReviewedAt: true,
+        entity: { select: { name: true, logoUrl: true, color: true, category: true } },
+      },
+    }),
     db.promotion.count({ where: { ...activePromoWhere(), requiresPayroll: true } }),
     db.review.findMany({
       where: { status: "APPROVED" },
@@ -60,62 +72,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
       select: { id: true, name: true, text: true, createdAt: true, promotion: { select: { entity: { select: { name: true } } } } },
     }),
   ]);
+  const offers: OfferItem[] = all;
   const allWithoutPayroll = withPayroll === 0;
   const totalCents = all.reduce((sum, p) => sum + p.bonusCents, 0);
   const worked = all.reduce((sum, p) => sum + p.workedCount, 0);
   const breakdown = [...all].sort((a, b) => b.bonusCents - a.bonusCents);
   const nonCash = breakdown.filter((b) => b.rewardType !== "CASH").map((b) => b.entity.name);
-
-  const q = norm(query);
-  const promos = all
-    .filter((p) => !category || p.entity.category === category)
-    .filter((p) => !effortFilter || EFFORT_FILTER_TEST[effortFilter](p))
-    .filter((p) => !q || norm(p.entity.name).includes(q) || norm(p.title).includes(q))
-    .sort((a, b) => {
-      // La opción estrella va siempre la primera.
-      if (a.featured !== b.featured) return a.featured ? -1 : 1;
-      switch (sortKey) {
-        case "facil":
-          return a.steps.length - b.steps.length || b.bonusCents - a.bonusCents;
-        case "revisadas":
-          return (b.lastReviewedAt?.getTime() ?? 0) - (a.lastReviewedAt?.getTime() ?? 0) || b.bonusCents - a.bonusCents;
-        case "caducan":
-          return (a.expiresAt?.getTime() ?? Infinity) - (b.expiresAt?.getTime() ?? Infinity) || b.bonusCents - a.bonusCents;
-        default:
-          return b.bonusCents - a.bonusCents;
-      }
-    });
-
-  const link = (next: Search) => {
-    const s = new URLSearchParams();
-    const merged: Search = { cat: category, esf: effortFilter, orden: sortKey, q: query, ...next };
-    if (merged.cat) s.set("cat", merged.cat);
-    if (merged.esf) s.set("esf", merged.esf);
-    if (merged.q) s.set("q", merged.q);
-    if (merged.orden && merged.orden !== "bono") s.set("orden", merged.orden);
-    const str = s.toString();
-    return `/${str ? `?${str}` : ""}#ofertas`;
-  };
-
-  // Solo se muestran los filtros que tienen alguna oferta: un filtro vacío solo confunde.
-  const noFilter = !category && !effortFilter;
-  const chips = [
-    { key: "todas", label: "Todas", href: link({ cat: undefined, esf: undefined }), on: noFilter, count: all.length },
-    ...Object.entries(EFFORT_FILTERS).map(([key, label]) => ({
-      key,
-      label,
-      href: link({ cat: undefined, esf: key }),
-      on: effortFilter === key,
-      count: all.filter(EFFORT_FILTER_TEST[key as keyof typeof EFFORT_FILTERS]).length,
-    })),
-    ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
-      key,
-      label,
-      href: link({ cat: key, esf: undefined }),
-      on: category === key,
-      count: all.filter((p) => p.entity.category === key).length,
-    })),
-  ].filter((c) => c.count > 0 || c.on);
 
   const faqs: [string, string][] = [
     [
@@ -126,7 +88,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
       "¿Tengo que domiciliar la nómina?",
       allWithoutPayroll
         ? "No. Ninguna de las ofertas actuales pide domiciliar la nómina."
-        : "En las marcadas con «✓ Sin nómina», no. Las que la piden lo indican en su tarjeta.",
+        : "En las marcadas con «Sin nómina», no. Las que la piden lo indican en su tarjeta.",
     ],
     [
       "¿Tengo que poner dinero?",
@@ -156,7 +118,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           <ul className="mt-6 hidden gap-4 text-sm sm:grid sm:grid-cols-3">
             {BENEFITS.map(([t, d]) => (
               <li key={t} className="flex gap-2">
-                <span aria-hidden className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-xs font-black text-ink">✓</span>
+                <span aria-hidden className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-ink">
+                  <IconCheck size={12} />
+                </span>
                 <span>
                   <strong className="block">{t}</strong>
                   <span className="text-white/80">{d}</span>
@@ -196,63 +160,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
 
       <div id="ofertas" className="wrap mt-4 scroll-mt-16 sm:mt-6">
         <h2 className="sr-only">Ofertas</h2>
-        <form action="/" method="get" role="search" className="flex flex-wrap items-center gap-2">
-          {category && <input type="hidden" name="cat" value={category} />}
-          {effortFilter && <input type="hidden" name="esf" value={effortFilter} />}
-          <label htmlFor="buscar" className="sr-only">Buscar entidad</label>
-          <input
-            id="buscar"
-            name="q"
-            type="search"
-            defaultValue={query}
-            placeholder="Buscar entidad (Openbank, Revolut…)"
-            className="input min-w-0 flex-1 basis-56"
-          />
-          <label htmlFor="orden" className="sr-only">Ordenar por</label>
-          <AutoSubmitSelect
-            id="orden"
-            name="orden"
-            defaultValue={sortKey}
-            className="input w-auto"
-            options={Object.entries(SORT_OPTIONS).map(([value, label]) => ({ value, label }))}
-          />
-          <button type="submit" className="btn btn-ghost">Buscar</button>
-        </form>
-
-        <nav aria-label="Filtrar ofertas" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-          {chips.map((c) => (
-            <Link key={c.key} href={c.href} className={`chip shrink-0 ${c.on ? "chip-on" : ""}`} aria-current={c.on ? "true" : undefined}>
-              {c.label}
-              <span className={`ml-1.5 text-xs ${c.on ? "text-white/80" : "text-muted"}`}>{c.count}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {query && (
-          <p className="mt-3 text-sm text-muted">
-            {promos.length} {promos.length === 1 ? "resultado" : "resultados"} para «{query}».{" "}
-            <Link href={link({ q: undefined })} className="font-semibold text-brand underline">Quitar búsqueda</Link>
-          </p>
-        )}
-
-        {promos.length === 0 ? (
-          <div className="card mt-4 p-6 text-center">
-            <p className="font-semibold">No hay ofertas que cumplan estos filtros.</p>
-            <p className="mt-2">
-              <Link href="/#ofertas" className="btn btn-primary btn-sm">Ver todas</Link>
-            </p>
-          </div>
-        ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {promos.map((p) => (
-              <li key={p.id} className="flex">
-                <PromoCard p={p} />
-              </li>
-            ))}
-          </ul>
-        )}
+        <OffersExplorer offers={offers} initial={{ q: query, sort, filters }} />
         <p className="mt-3 text-xs text-muted">
-          Las cantidades son las recompensas anunciadas por cada entidad para nuevos clientes. No son ganancias garantizadas.
+          Las cantidades son las recompensas anunciadas por cada entidad para nuevos clientes. No son ganancias garantizadas: dependen de cumplir
+          sus condiciones. «Pones tú» es el dinero que piden ingresar, gastar o invertir según sus condiciones; si no lo indican, aparece «No
+          indicado».
         </p>
 
         <section aria-labelledby="como" className="card mt-10 p-4 sm:p-5">

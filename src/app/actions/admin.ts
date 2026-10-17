@@ -95,6 +95,9 @@ export async function savePromotionAction(_prev: FormState, form: FormData): Pro
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const bonusCents = parseEurosToCents(str(form, "bonusEuros") || "0");
   if (bonusCents === null) return { error: "La cantidad del bono debe ser un número, por ejemplo 20 o 20,50." };
+  const requiredRaw = str(form, "requiredEuros");
+  const requiredCents = requiredRaw ? parseEurosToCents(requiredRaw) : null;
+  if (requiredRaw && requiredCents === null) return { error: "El desembolso mínimo debe ser un número, por ejemplo 70 o 1000." };
   const steps = str(form, "steps")
     .split(/\r?\n/)
     .map((s) => s.replace(/^\s*(\d+[.)-]|[-•*])\s*/, "").trim())
@@ -108,6 +111,7 @@ export async function savePromotionAction(_prev: FormState, form: FormData): Pro
   const data = {
     ...parsed.data,
     bonusCents,
+    requiredCents,
     steps,
     expiresAt,
     featured: form.get("featured") === "on",

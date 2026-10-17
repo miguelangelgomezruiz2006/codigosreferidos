@@ -26,6 +26,8 @@ interface PromoDef {
   effort: Effort;
   requirementText: string;
   rewardType: RewardType;
+  // Desembolso mínimo en céntimos, solo si las condiciones dan un importe en euros.
+  requiredCents?: number | null;
 }
 
 const endOfDay = (isoDate: string) => new Date(`${isoDate}T23:59:59+02:00`);
@@ -56,6 +58,7 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "openbank", name: "Openbank", category: "BANCO", website: "https://www.openbank.es", color: "#D9254C" },
     slug: "openbank-invita-a-tus-amigos",
+    requiredCents: 7000,
     effort: "DEPOSIT",
     requirementText: "Ingresar 70 €",
     rewardType: "CASH",
@@ -78,6 +81,7 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "myinvestor", name: "MyInvestor", category: "BROKER", website: "https://myinvestor.es", color: "#2B2D42" },
     slug: "myinvestor-plan-amigo",
+    requiredCents: 10000,
     effort: "DEPOSIT",
     requirementText: "Mantener 1.000 € o invertir 100 €",
     rewardType: "CASH",
@@ -98,6 +102,7 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "mintos", name: "Mintos", category: "INVERSION", website: "https://www.mintos.com", color: "#3D7A5A" },
     slug: "mintos-invita-a-un-amigo",
+    requiredCents: 100000,
     effort: "INVEST",
     requirementText: "Invertir 1.000 € durante 90 días",
     rewardType: "CASH",
@@ -161,6 +166,7 @@ const PROMOS: PromoDef[] = [
   {
     entity: { slug: "kraken", name: "Kraken", category: "INVERSION", website: "https://www.kraken.com", color: "#5741D9" },
     slug: "kraken-invitacion",
+    requiredCents: 20000,
     effort: "INVEST",
     requirementText: "Depositar y operar 200 €",
     rewardType: "CASH",
@@ -241,6 +247,7 @@ export async function loadPromotions(db: PrismaClient, { onlyMissing = false } =
       effort: p.effort,
       requirementText: p.requirementText,
       rewardType: p.rewardType,
+      requiredCents: p.requiredCents ?? null,
       lastReviewedAt: null,
     };
     if (existing) await db.promotion.update({ where: { id: existing.id }, data });

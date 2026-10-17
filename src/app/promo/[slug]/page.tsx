@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { CodeBox } from "@/components/CodeBox";
 import { EntityLogo } from "@/components/EntityLogo";
 import { OfferReportForm } from "@/components/OfferReportForm";
-import { ExpiryLabel, StatusLabel, WorkedLabel } from "@/components/PromoCard";
+import { IconStar } from "@/components/Icons";
+import { ExpiryLabel, StatusLabel, WorkedLabel, outlayText } from "@/components/PromoCard";
+import { ShareButton } from "@/components/ShareButton";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewList } from "@/components/ReviewList";
 import { Testimonios } from "@/components/Testimonios";
@@ -64,22 +66,32 @@ export default async function PromoPage({ params }: Props) {
           <header className="card p-4 sm:p-5 lg:col-start-1">
             <div className="flex items-center gap-3">
               <EntityLogo name={entity.name} logoUrl={entity.logoUrl} color={entity.color} size={56} />
-              <div>
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-extrabold leading-tight sm:text-2xl">{entity.name}</h1>
-                {promo.featured && active && <span className="badge mt-1 bg-accent text-ink">★ Opción estrella</span>}
+                {promo.featured && active && (
+                  <span className="badge mt-1 gap-1 bg-accent text-ink">
+                    <IconStar size={12} />
+                    Opción estrella
+                  </span>
+                )}
               </div>
+              <ShareButton title={`${entity.name}: ${promo.bonusText}`} path={`/promo/${promo.slug}`} />
             </div>
             {active ? (
-              <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <div className="rounded-lg bg-brand-soft p-3">
+              <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="col-span-2 rounded-lg bg-brand-soft p-3 sm:col-span-1">
                   <dt className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Te dan</dt>
-                  <dd className="text-xl font-extrabold leading-tight text-brand">{promo.bonusText}</dd>
+                  <dd className="font-display text-xl font-bold leading-tight text-brand">{promo.bonusText}</dd>
+                </div>
+                <div className="rounded-lg bg-bg p-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Pones tú</dt>
+                  <dd className="text-lg font-bold leading-tight tabular-nums">{outlayText(promo)}</dd>
                 </div>
                 <div className="rounded-lg bg-bg p-3">
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Nómina</dt>
-                  <dd className="text-lg font-bold leading-tight">{promo.requiresPayroll ? "Hay que domiciliarla" : "✓ No hace falta"}</dd>
+                  <dd className="text-lg font-bold leading-tight">{promo.requiresPayroll ? "Hay que domiciliarla" : "No hace falta"}</dd>
                 </div>
-                <div className="rounded-lg bg-bg p-3">
+                <div className="col-span-2 rounded-lg bg-bg p-3 sm:col-span-1">
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Plazo</dt>
                   <dd className="text-lg font-bold leading-tight">
                     {promo.expiresAt ? (
