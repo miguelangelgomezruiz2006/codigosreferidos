@@ -1,6 +1,6 @@
 /**
  * Opiniones de personas que han usado las promociones.
- * Son amigos del propietario de la web, y así se indica en la página.
+ * Las han enviado al propietario personas que han usado las ofertas.
  * Para añadir una: nombre, texto con sus palabras y `entities` con los slugs de las entidades
  * (los de Administración › Entidades) para que salga también en esas fichas.
  */

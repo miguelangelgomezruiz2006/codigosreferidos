@@ -1,7 +1,6 @@
 import { entityNames, type Testimonio } from "@/lib/testimonios";
-import { SITE_NAME } from "@/lib/site";
 
-/** Opiniones de amigos del propietario. Se indica quiénes son y si dicen haber cobrado o siguen pendientes. */
+/** Opiniones que nos han enviado usuarios. Se indica si dicen haber cobrado o siguen pendientes. */
 export function Testimonios({
   items,
   title,
@@ -39,7 +38,7 @@ export function Testimonios({
         ))}
       </ul>
       <p className="hint mt-2">
-        Son amigos del propietario de {SITE_NAME} y cuentan su experiencia con sus palabras. No hemos comprobado los cobros con las entidades.
+        Opiniones que nos han enviado personas que han usado estas ofertas. No hemos comprobado los cobros con las entidades.
       </p>
     </section>
   );
