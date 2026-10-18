@@ -38,7 +38,7 @@ export function Testimonios({
         ))}
       </ul>
       <p className="hint mt-2">
-        Opiniones que nos han enviado personas que han usado estas ofertas. No hemos comprobado los cobros con las entidades.
+        Opiniones que nos han enviado personas que han usado estas ofertas. No podemos comprobar los cobros con las entidades.
       </p>
     </section>
   );

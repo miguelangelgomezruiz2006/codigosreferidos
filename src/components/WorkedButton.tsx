@@ -20,7 +20,7 @@ export function WorkedButton({ promotionId, entityName, initialCount }: { promot
       <h2 className="font-bold">¿Ya has cobrado el bono de {entityName}?</h2>
       <p className="text-sm">
         {count > 0
-          ? `${count} ${count === 1 ? "persona dice" : "personas dicen"} haberlo cobrado. Lo declaran ellas; no lo comprobamos con la entidad.`
+          ? `${count} ${count === 1 ? "persona dice" : "personas dicen"} haberlo cobrado. Lo declaran ellas; no podemos comprobarlo con la entidad.`
           : "Si ya has recibido la recompensa, cuéntalo para ayudar a otras personas."}
       </p>
       {message ? (

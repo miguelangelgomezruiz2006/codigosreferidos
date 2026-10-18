@@ -98,7 +98,7 @@ export default async function HowItWorks() {
           <li>
             Si ves una oferta caducada o con algún dato mal, usa el enlace «Avísanos» al final de su ficha. Revisamos cada aviso.
           </li>
-          <li>Las opiniones son de personas que han usado las ofertas. Revisamos cada una antes de publicarla y no comprobamos los cobros con las entidades.</li>
+          <li>Las opiniones son de personas que han usado las ofertas. Revisamos cada una antes de publicarla, pero no podemos comprobar los cobros con las entidades.</li>
         </ul>
       </section>
 

@@ -109,7 +109,7 @@ export function StatusLabel({ status }: { status: OfferStatus }) {
   }
 }
 
-/** Personas que dicen haber cobrado (lo declaran ellas al pulsar «Me ha funcionado»; no lo comprobamos con la entidad). */
+/** Personas que dicen haber cobrado (lo declaran ellas al pulsar «Me ha funcionado»; no podemos comprobarlo con la entidad). */
 export function WorkedLabel({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
