@@ -11,17 +11,20 @@ import { getOrCreateVisitorId, ipFingerprint } from "@/lib/visitor";
 // Acciones públicas: no necesitan cuenta. Todo el recuento se decide aquí, en el servidor.
 
 const id = z.string().min(1).max(40);
+// Códigos que ya le han salido a este visitante en la página («Dame otro código» los salta).
+const seenIds = z.array(id).max(200);
 
 export type RevealState = { ok: true; code: RevealedCode } | { ok: false; error: string };
 
-export async function revealAction(promotionId: string, another = false): Promise<RevealState> {
+export async function revealAction(promotionId: string, another = false, seen: string[] = []): Promise<RevealState> {
   if (!id.safeParse(promotionId).success) return { ok: false, error: "Promoción no válida." };
+  const seenParsed = seenIds.safeParse(seen);
   const ip = await ipFingerprint();
   if (!(await hitRateLimit(`reveal:${ip}`, 120, 60 * 60 * 1000))) {
     return { ok: false, error: "Demasiadas peticiones seguidas. Espera un rato y vuelve a probar." };
   }
   const visitorId = await getOrCreateVisitorId();
-  const code = await revealCode(promotionId, visitorId, another, `ip:${ip}`);
+  const code = await revealCode(promotionId, visitorId, another, `ip:${ip}`, seenParsed.success ? seenParsed.data : []);
   if (!code) return { ok: false, error: "Ahora mismo no hay códigos disponibles para esta promoción." };
   return { ok: true, code };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickCode, shouldAutoHide, type RotationCandidate } from "./rotation";
+import { pickAnother, pickCode, shouldAutoHide, type RotationCandidate } from "./rotation";
 
 let n = 0;
 function code(overrides: Partial<RotationCandidate>): RotationCandidate {
@@ -76,6 +76,50 @@ describe("rotación de códigos", () => {
 
   it("devuelve vacío si no hay ningún código disponible", () => {
     expect(pickCode([])).toBeNull();
+  });
+});
+
+describe("«Dame otro código»", () => {
+  // Simula a alguien que pulsa el botón una y otra vez, como hace la ficha.
+  function press(codes: RotationCandidate[], times: number) {
+    let seen: string[] = [];
+    let current: RotationCandidate | undefined;
+    const shown: string[] = [];
+    for (let i = 0; i < times; i++) {
+      const next = pickAnother(codes, { current, seen, random: () => 0 });
+      if (!next) break;
+      seen = seen.includes(next.id) ? [next.id] : [...seen, next.id];
+      current = next;
+      shown.push(next.id);
+    }
+    return shown;
+  }
+
+  it("recorre todos los códigos del administrador en orden, sin rebotar entre los dos primeros", () => {
+    const codes = [0, 1, 2, 3, 4].map((priority) => code({ kind: "ADMIN", maxUses: 2, priority }));
+    expect(press(codes, 5)).toEqual(codes.map((c) => c.id));
+  });
+
+  it("después de los del administrador pasa a los de la comunidad y luego vuelve a empezar", () => {
+    const a = code({ kind: "ADMIN", priority: 0 });
+    const b = code({ kind: "ADMIN", priority: 1 });
+    const c1 = code({});
+    const c2 = code({});
+    expect(press([a, b, c1, c2], 6)).toEqual([a.id, b.id, c1.id, c2.id, a.id, b.id]);
+  });
+
+  it("se salta los agotados y los que esa persona dijo que no funcionan", () => {
+    const a = code({ kind: "ADMIN", priority: 0 });
+    const spent = code({ kind: "ADMIN", priority: 1, maxUses: 2, uses: 2 });
+    const reported = code({ kind: "ADMIN", priority: 2 });
+    const d = code({ kind: "ADMIN", priority: 3 });
+    const all = [a, spent, reported, d];
+    expect(pickAnother(all, { current: a, seen: [a.id], reported: [reported.id] })?.id).toBe(d.id);
+  });
+
+  it("si solo hay un código, lo vuelve a mostrar", () => {
+    const only = code({ kind: "ADMIN" });
+    expect(pickAnother([only], { current: only, seen: [only.id] })?.id).toBe(only.id);
   });
 });
 

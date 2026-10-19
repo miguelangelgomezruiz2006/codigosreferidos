@@ -27,6 +27,8 @@ export function CodeBox({
   const [reason, setReason] = useState("");
   const [reportMsg, setReportMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // Códigos que ya han salido aquí: «Dame otro código» los recorre todos antes de repetir.
+  const [seen, setSeen] = useState<string[]>([]);
 
   function reveal(another = false) {
     setError(null);
@@ -34,9 +36,13 @@ export function CodeBox({
     setReporting(false);
     setReportMsg(null);
     start(async () => {
-      const res = await revealAction(promotionId, another);
-      if (res.ok) setCode(res.code);
-      else setError(res.error);
+      const res = await revealAction(promotionId, another, another ? seen : []);
+      if (res.ok) {
+        const shownId = res.code.id;
+        setCode(res.code);
+        // Si sale uno ya visto es que se han recorrido todos: la vuelta empieza de nuevo.
+        setSeen((prev) => (prev.includes(shownId) ? [shownId] : [...prev, shownId]));
+      } else setError(res.error);
     });
   }
 

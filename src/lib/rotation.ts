@@ -52,6 +52,27 @@ export function pickCode<T extends RotationCandidate>(
   return tied[Math.min(tied.length - 1, Math.floor(random() * tied.length))];
 }
 
+/**
+ * «Dame otro código»: el siguiente que esta persona aún no ha visto, en el orden de
+ * la rotación (primero los del administrador por prioridad, luego la comunidad).
+ * Cuando ya los ha visto todos, vuelve a empezar por el primero. Los que ha avisado
+ * que no funcionan se evitan mientras haya otros.
+ */
+export function pickAnother<T extends RotationCandidate>(
+  candidates: T[],
+  options: { current?: T; seen?: readonly string[]; reported?: readonly string[]; random?: () => number } = {},
+): T | null {
+  const { current, seen = [], reported = [], random } = options;
+  const currentIds = current ? [current.id] : [];
+  return (
+    pickCode(candidates, { exclude: new Set([...seen, ...reported, ...currentIds]), random }) ??
+    pickCode(candidates, { exclude: new Set([...reported, ...currentIds]), random }) ??
+    pickCode(candidates, { exclude: new Set(currentIds), random }) ??
+    // Si solo existe el código actual, se vuelve a mostrar ese.
+    (current && isEligible(current) ? current : null)
+  );
+}
+
 /** ¿Debe ocultarse un código de la comunidad tras un nuevo reporte? */
 export function shouldAutoHide(kind: RotationCandidate["kind"], reportCount: number, threshold: number): boolean {
   return kind === "COMMUNITY" && threshold > 0 && reportCount >= threshold;

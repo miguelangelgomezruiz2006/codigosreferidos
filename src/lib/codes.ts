@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import { isEligible, pickCode, shouldAutoHide } from "@/lib/rotation";
+import { isEligible, pickAnother, shouldAutoHide } from "@/lib/rotation";
 
 /** Promociones visibles como activas: estado activo y sin caducar. */
 export function activePromoWhere(now = new Date()): Prisma.PromotionWhereInput {
@@ -21,7 +21,8 @@ export interface RevealedCode {
 
 /**
  * Asigna un código a un visitante. Si ya tenía uno válido, se le devuelve el
- * mismo (recargar no gasta la rotación). Con `another`, se busca uno distinto.
+ * mismo (recargar no gasta la rotación). Con `another`, se busca uno distinto
+ * que no esté en `seen` (los que ya le han salido), para recorrerlos todos.
  * Los códigos de los que esta conexión ya avisó que no funcionan se evitan mientras haya otros.
  */
 export async function revealCode(
@@ -29,6 +30,7 @@ export async function revealCode(
   visitorId: string,
   another = false,
   reporterKey?: string,
+  seen: readonly string[] = [],
 ): Promise<RevealedCode | null> {
   return db.$transaction(async (tx) => {
     const promo = await tx.promotion.findUnique({ where: { id: promotionId } });
@@ -47,11 +49,7 @@ export async function revealCode(
     const reported = reporterKey
       ? (await tx.codeReport.findMany({ where: { reporterKey, code: { promotionId } }, select: { codeId: true } })).map((r) => r.codeId)
       : [];
-    const chosen =
-      pickCode(codes, { exclude: new Set([...reported, ...(current ? [current.id] : [])]) }) ??
-      pickCode(codes, { exclude: current ? new Set([current.id]) : undefined }) ??
-      // Si solo existe el código actual, se vuelve a mostrar ese.
-      (current && isEligible(current) ? current : null);
+    const chosen = pickAnother(codes, { current, seen, reported });
     if (!chosen) return null;
 
     await tx.assignment.upsert({
