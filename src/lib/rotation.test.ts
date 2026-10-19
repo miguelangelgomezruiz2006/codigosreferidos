@@ -123,6 +123,35 @@ describe("«Dame otro código»", () => {
   });
 });
 
+describe("turnos entre los códigos del administrador", () => {
+  it("cada persona nueva recibe el siguiente al último mostrado y al final vuelve a empezar", () => {
+    const codes = [0, 1, 2].map((priority) => code({ kind: "ADMIN", priority }));
+    let last: string | undefined;
+    const shown: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      const next = pickAnother(codes, { lastShown: last })!;
+      shown.push(next.id);
+      last = next.id;
+    }
+    const [a, b, c] = codes.map((x) => x.id);
+    expect(shown).toEqual([a, b, c, a, b]);
+  });
+
+  it("se salta los agotados al buscar el siguiente", () => {
+    const a = code({ kind: "ADMIN", priority: 0 });
+    const spent = code({ kind: "ADMIN", priority: 1, maxUses: 1, uses: 1 });
+    const c = code({ kind: "ADMIN", priority: 2 });
+    expect(pickCode([a, spent, c], { after: a.id })?.id).toBe(c.id);
+  });
+
+  it("sin usos máximos (ilimitados) nunca se agotan y siguen rotando", () => {
+    const a = code({ kind: "ADMIN", priority: 0, uses: 999 });
+    const b = code({ kind: "ADMIN", priority: 1, uses: 999 });
+    expect(pickCode([a, b], { after: a.id })?.id).toBe(b.id);
+    expect(pickCode([a, b], { after: b.id })?.id).toBe(a.id);
+  });
+});
+
 describe("ocultado automático por reportes", () => {
   it("oculta un código de la comunidad al llegar al umbral", () => {
     expect(shouldAutoHide("COMMUNITY", 2, 3)).toBe(false);

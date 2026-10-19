@@ -42,13 +42,13 @@ const MY_CODES: MyCode[] = [
     entity: { slug: "robinhood", name: "Robinhood", category: "BROKER", website: "https://robinhood.com", color: "#1E7F3C" },
     link: "https://join.robinhood.com/eu_crypto/miguelg-c6475b/",
   },
-  // Openbank: cada código vale para pocos amigos, así que van con límite y en orden.
-  { entity: OPENBANK, code: "58967318513821209101", maxUses: 2, priority: 0 },
-  { entity: OPENBANK, code: "58977407618141198202", maxUses: 2, priority: 1 },
-  { entity: OPENBANK, code: "58977412048160156231", maxUses: 2, priority: 2 },
-  { entity: OPENBANK, code: "58977421019019127916", maxUses: 2, priority: 3 },
-  { entity: OPENBANK, code: "58977451802193130011", maxUses: 2, priority: 4 },
-  { entity: OPENBANK, code: "5897739168721418287A", maxUses: 2, priority: 5 },
+  // Openbank: varios códigos sin límite de usos; la web los reparte por turnos.
+  { entity: OPENBANK, code: "58967318513821209101", priority: 0 },
+  { entity: OPENBANK, code: "58977407618141198202", priority: 1 },
+  { entity: OPENBANK, code: "58977412048160156231", priority: 2 },
+  { entity: OPENBANK, code: "58977421019019127916", priority: 3 },
+  { entity: OPENBANK, code: "58977451802193130011", priority: 4 },
+  { entity: OPENBANK, code: "5897739168721418287A", priority: 5 },
   {
     entity: { slug: "bbva", name: "BBVA", category: "BANCO", website: "https://www.bbva.es", color: "#1464A5" },
     code: "14C700311035E0",

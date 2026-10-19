@@ -49,7 +49,13 @@ export async function revealCode(
     const reported = reporterKey
       ? (await tx.codeReport.findMany({ where: { reporterKey, code: { promotionId } }, select: { codeId: true } })).map((r) => r.codeId)
       : [];
-    const chosen = pickAnother(codes, { current, seen, reported });
+    // Último código del administrador mostrado a cualquier persona: el siguiente visitante recibe el de detrás.
+    const lastReveal = await tx.codeEvent.findFirst({
+      where: { promotionId, type: "REVEAL", code: { kind: "ADMIN" } },
+      orderBy: { createdAt: "desc" },
+      select: { codeId: true },
+    });
+    const chosen = pickAnother(codes, { current, seen, reported, lastShown: lastReveal?.codeId });
     if (!chosen) return null;
 
     await tx.assignment.upsert({
