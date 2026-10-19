@@ -4,6 +4,10 @@
  *
  * Si una entidad no tiene promoción, se crea una en BORRADOR (no se ve) con avisos
  * [PENDIENTE]: el importe y los requisitos reales se rellenan en Administración.
+ *
+ * OJO: en la web publicada este archivo solo se carga para promociones NUEVAS.
+ * Para añadir un código a una promoción que ya está publicada, usa Administración › Promociones
+ * (o una migración SQL, como prisma/migrations/20261019120000_codigos_openbank).
  */
 import type { Category, PrismaClient } from "../../src/generated/prisma/client";
 
