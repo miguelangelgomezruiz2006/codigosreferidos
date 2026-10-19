@@ -46,9 +46,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   Admin
                 </Link>
               )}
-              <Link href="/#ofertas" className="btn btn-accent btn-sm whitespace-nowrap">
-                <span className="sm:hidden">Ofertas</span>
-                <span className="hidden sm:inline">Explorar ofertas</span>
+              {/* «Explorar ofertas» ya está en la portada: aquí va la acción de la comunidad. */}
+              <Link href="/mi-panel" className="btn btn-accent btn-sm whitespace-nowrap">
+                {user ? "Mis códigos" : (
+                  <>
+                    <span className="sm:hidden">Tu código</span>
+                    <span className="hidden sm:inline">Comparte tu código</span>
+                  </>
+                )}
               </Link>
             </nav>
           </div>
